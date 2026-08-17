@@ -77,9 +77,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Don't Charge Me" },
+      { title: "Don't Charge Me Bro" },
       { name: "description", content: "Track free trials and subscriptions before they bill you." },
-      { property: "og:title", content: "Don't Charge Me" },
+      { property: "og:title", content: "Don't Charge Me Bro" },
       {
         property: "og:description",
         content: "Track free trials and subscriptions before they bill you.",
@@ -93,7 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;800;900&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],

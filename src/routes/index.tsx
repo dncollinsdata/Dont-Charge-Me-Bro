@@ -1,21 +1,34 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Plus, Trash2, ShieldCheck, X, Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AddLeech } from "@/components/dcmb/AddLeech";
+import { Home } from "@/components/dcmb/Home";
+import { Onboarding } from "@/components/dcmb/Onboarding";
+import { Panic } from "@/components/dcmb/Panic";
+import { Receipt } from "@/components/dcmb/Receipt";
+import { Roasts } from "@/components/dcmb/Roasts";
+import { Shame, type Medal } from "@/components/dcmb/Shame";
+import { TabBar, type TabScreen } from "@/components/dcmb/TabBar";
+import { Toast } from "@/components/dcmb/Toast";
 import {
-  type Cycle,
-  type Sub,
-  countdownLabel,
+  addWasted,
+  advance,
   daysUntil,
-  formatDate,
+  defaultPrefs,
+  loadPrefs,
   loadSubs,
-  money,
+  loadWasted,
   monthlyCost,
+  money,
   nextDate,
+  savePrefs,
   saveSubs,
+  saveWasted,
+  streakDays,
   todayISO,
+  type Prefs,
+  type Row,
+  type Sub,
+  type WastedEntry,
 } from "@/lib/trials";
 import {
   notificationPermission,
@@ -23,21 +36,25 @@ import {
   requestNotifications,
 } from "@/lib/notify";
 
+type Screen =
+  "onboarding" | "home" | "add" | "panic" | "shame" | "receipt" | "notifs";
+
+const TAB_SCREENS: Screen[] = ["home", "add", "shame", "notifs"];
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Don't Charge Me — Free Trial & Subscription Reminder" },
+      { title: "Don't Charge Me Bro — free trial & subscription tracker" },
       {
         name: "description",
         content:
-          "Add a free trial in 5 seconds and see exactly when it turns into a charge. No account, no card, nothing leaves your phone.",
+          "Add a free trial in 5 seconds and get roasted before it turns into a charge. No account, no card, nothing leaves your phone.",
       },
-      { property: "og:title", content: "Don't Charge Me — Never get billed by surprise" },
+      { property: "og:title", content: "Don't Charge Me Bro" },
       {
         property: "og:description",
         content:
-          "The dead-simple tracker for free trials and subscriptions. See what bills next, cancel before it hits.",
+          "Track the leeches. Cancel before they bill you. Keep the bag. No account, no card, nothing leaves your phone.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -46,300 +63,229 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const CYCLES: { value: Cycle; label: string }[] = [
-  { value: "trial", label: "Free trial" },
-  { value: "monthly", label: "Monthly" },
-  { value: "yearly", label: "Yearly" },
-];
-
-function plusDays(n: number) {
-  const d = new Date(todayISO() + "T00:00:00");
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-}
-
 function Index() {
   const [subs, setSubs] = useState<Sub[]>([]);
+  const [wasted, setWasted] = useState<WastedEntry[]>([]);
+  const [prefs, setPrefs] = useState<Prefs>(defaultPrefs);
+  const [screen, setScreen] = useState<Screen>("home");
+  const [toast, setToast] = useState<string | null>(null);
+  const [perm, setPerm] = useState<NotificationPermission | "unsupported">(
+    "unsupported",
+  );
   const [ready, setReady] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [perm, setPerm] = useState<NotificationPermission | "unsupported">("unsupported");
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    const stored = loadPrefs();
     setSubs(loadSubs());
-    setReady(true);
+    setWasted(loadWasted());
+    setPrefs(stored);
+    setScreen(stored.onboarded ? "home" : "onboarding");
     setPerm(notificationPermission());
+    setReady(true);
   }, []);
 
   useEffect(() => {
     if (ready) saveSubs(subs);
   }, [subs, ready]);
+  useEffect(() => {
+    if (ready) saveWasted(wasted);
+  }, [wasted, ready]);
+  useEffect(() => {
+    if (ready) savePrefs(prefs);
+  }, [prefs, ready]);
 
-  const rows = useMemo(
+  useEffect(
+    () => () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    },
+    [],
+  );
+
+  const showToast = useCallback((message: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(message);
+    toastTimer.current = setTimeout(() => setToast(null), 2600);
+  }, []);
+
+  const rows = useMemo<Row[]>(
     () =>
       subs
-        .map((s) => {
-          const date = nextDate(s);
-          return { sub: s, date, days: daysUntil(date) };
+        .map((sub) => {
+          const date = nextDate(sub);
+          return { sub, date, days: daysUntil(date) };
         })
         .sort((a, b) => a.days - b.days),
     [subs],
   );
 
+  const panic = rows.find((r) => r.days <= 0) ?? null;
+  const monthly = subs.reduce((sum, s) => sum + monthlyCost(s), 0);
+  const wastedTotal = wasted.reduce((sum, w) => sum + w.amount, 0);
+  const streak = streakDays(prefs.streakSince);
+
   useEffect(() => {
     if (!ready || perm !== "granted") return;
     notifyExpiring(
-      rows.map((r) => ({ id: r.sub.id, name: r.sub.name, amount: r.sub.amount, days: r.days })),
+      rows.map((r) => ({
+        id: r.sub.id,
+        name: r.sub.name,
+        amount: r.sub.amount,
+        days: r.days,
+      })),
+      prefs.roast,
     );
-  }, [rows, ready, perm]);
+  }, [rows, ready, perm, prefs.roast]);
 
-  const monthly = subs.reduce((sum, s) => sum + monthlyCost(s), 0);
-  const soon = rows.filter((r) => r.days <= 3);
+  const medals: Medal[] = [
+    {
+      emoji: "🩸",
+      title: "FIRST BLOOD",
+      body: "cancelled his first trial. a nation wept.",
+      locked: prefs.wins < 1,
+    },
+    {
+      emoji: "✂️",
+      title: "SERIAL YEETER",
+      body: "ten confirmed Ws. companies fear him.",
+      locked: prefs.wins < 10,
+    },
+    {
+      emoji: "🔥",
+      title: "CLOSE CALL",
+      body: "cancelled with 0 days left. absolute cinema.",
+      locked: prefs.closestCall === null || prefs.closestCall > 0,
+    },
+    {
+      emoji: "🏅",
+      title: "FLAWLESS MONTH",
+      body: "30 days, zero charges. locked. for now.",
+      locked: streak < 30,
+    },
+  ];
 
+  /** A cancel is a win: bank it for the sticker book, then drop the leech. */
+  function recordWin(row: Row) {
+    setPrefs((p) => ({
+      ...p,
+      wins: p.wins + 1,
+      closestCall:
+        p.closestCall === null ? row.days : Math.min(p.closestCall, row.days),
+    }));
+    setSubs((prev) => prev.filter((s) => s.id !== row.sub.id));
+  }
+
+  function letItCharge(row: Row) {
+    setWasted((prev) => addWasted(prev, row.sub));
+    setSubs((prev) => prev.map((s) => (s.id === row.sub.id ? advance(s) : s)));
+    setPrefs((p) => ({ ...p, streakSince: todayISO() }));
+  }
+
+  async function shareShame() {
+    const text = `I have donated ${money(Math.round(wastedTotal))} to companies I forgot about. Don't Charge Me Bro 🧾`;
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ text });
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      showToast("copied 📋 go be honest somewhere");
+    } catch {
+      showToast("couldn't share that L 😔");
+    }
+  }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-lg px-5 pb-32 pt-10">
-      <header className="mb-8">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-          <ShieldCheck className="size-3.5" />
-          Stays on your device
-        </div>
-        <h1 className="text-4xl font-bold leading-[1.05]">
-          Don&apos;t charge
-          <br />
-          me.
-        </h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Every free trial you forget becomes a subscription you never wanted. Add it here in five
-          seconds and always know what bills next.
-        </p>
-      </header>
-
-      {rows.length > 0 && (
-        <section className="mb-6 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border bg-card p-4 shadow-soft">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Per month</div>
-            <div className="numeric mt-1 font-display text-2xl font-bold">{money(monthly)}</div>
-          </div>
-          <div className="rounded-2xl border bg-card p-4 shadow-soft">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Per year</div>
-            <div className="numeric mt-1 font-display text-2xl font-bold">{money(monthly * 12)}</div>
-          </div>
-        </section>
-      )}
-
-      {soon.length > 0 && (
-        <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4">
-          <p className="text-sm font-semibold text-destructive">
-            {soon.length === 1 && soon[0]
-              ? `${soon[0].sub.name} charges ${countdownLabel(soon[0].days)}.`
-              : `${soon.length} charges land in the next 3 days.`}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">Cancel now if you don&apos;t want it.</p>
-        </div>
-      )}
-
-      {ready && perm === "default" && rows.length > 0 && (
-        <div className="mb-6 flex items-center gap-3 rounded-2xl border bg-card p-4 shadow-soft">
-          <Bell className="size-4 shrink-0 text-muted-foreground" />
-          <p className="flex-1 text-sm text-muted-foreground">
-            Get an alert when a trial is about to charge you.
-          </p>
-          <Button
-            size="sm"
-            onClick={async () => {
-              const result = await requestNotifications();
-              setPerm(result);
+    <main className="flex min-h-dvh justify-center bg-bro-sky-deep sm:items-center sm:p-6">
+      <div className="relative flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-bro-sky sm:h-[860px] sm:max-h-[calc(100dvh-3rem)] sm:rounded-[32px] sm:border-4 sm:border-bro-ink sm:shadow-hard-lg">
+        {ready && screen === "onboarding" && (
+          <Onboarding
+            onDismiss={() => {
+              setPrefs((p) => ({ ...p, onboarded: true }));
+              setScreen("home");
             }}
-          >
-            Enable
-          </Button>
-        </div>
-      )}
-
-
-      <section className="space-y-3">
-        {ready && rows.length === 0 && (
-          <div className="rounded-2xl border border-dashed p-8 text-center">
-            <p className="font-display text-lg font-semibold">Nothing tracked yet</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Start with the trial you signed up for most recently.
-            </p>
-          </div>
+          />
         )}
 
-        {rows.map(({ sub, date, days }) => (
-          <article
-            key={sub.id}
-            className="flex items-center gap-3 rounded-2xl border bg-card p-4 shadow-soft"
-          >
-            <div
-              className={`numeric flex size-14 shrink-0 flex-col items-center justify-center rounded-xl ${
-                days <= 3 ? "bg-destructive/15 text-destructive" : "bg-secondary text-secondary-foreground"
-              }`}
-            >
-              <span className="font-display text-lg font-bold leading-none">
-                {days < 0 ? "!" : days}
-              </span>
-              <span className="mt-0.5 text-[10px] uppercase tracking-wide">
-                {days === 1 ? "day" : "days"}
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate font-semibold">{sub.name}</div>
-              <div className="numeric text-sm text-muted-foreground">
-                {money(sub.amount)}
-                {sub.cycle === "trial"
-                  ? " when the trial ends"
-                  : sub.cycle === "monthly"
-                    ? " / month"
-                    : " / year"}
-              </div>
-              <div className="mt-0.5 text-xs text-muted-foreground">
-                {formatDate(date)} · {countdownLabel(days)}
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={`Remove ${sub.name}`}
-              onClick={() => setSubs((prev) => prev.filter((s) => s.id !== sub.id))}
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          </article>
-        ))}
-      </section>
+        {ready && screen === "home" && (
+          <Home
+            rows={rows}
+            panic={panic}
+            monthly={monthly}
+            streak={streak}
+            onOpenPanic={() => setScreen("panic")}
+            onYeet={(row) => {
+              recordWin(row);
+              showToast("YEETED. one less leech 🔥");
+            }}
+          />
+        )}
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/85 px-5 py-4 backdrop-blur">
-        <div className="mx-auto max-w-lg">
-          <Button className="w-full" size="lg" onClick={() => setOpen(true)}>
-            <Plus className="size-4" />
-            Add a trial or subscription
-          </Button>
-        </div>
+        {ready && screen === "add" && (
+          <AddLeech
+            onBack={() => setScreen("home")}
+            onAdd={(sub) => {
+              setSubs((prev) => [...prev, sub]);
+              setScreen("home");
+              showToast("TRACKED ✅ bro is slightly less doomed");
+            }}
+          />
+        )}
+
+        {ready && screen === "panic" && (
+          <Panic
+            row={panic}
+            onCancelled={() => {
+              if (panic) recordWin(panic);
+              setScreen("home");
+              showToast("CERTIFIED W 🏆 the streak lives");
+            }}
+            onAccepted={() => {
+              if (panic) letItCharge(panic);
+              setScreen("home");
+              showToast("streak: deceased 🪦 rip");
+            }}
+          />
+        )}
+
+        {ready && screen === "shame" && (
+          <Shame
+            wasted={wasted}
+            wastedTotal={wastedTotal}
+            medals={medals}
+            onReceipt={() => setScreen("receipt")}
+          />
+        )}
+
+        {ready && screen === "receipt" && (
+          <Receipt
+            wasted={wasted}
+            wastedTotal={wastedTotal}
+            onBack={() => setScreen("shame")}
+            onShare={shareShame}
+          />
+        )}
+
+        {ready && screen === "notifs" && (
+          <Roasts
+            rows={rows}
+            roast={prefs.roast}
+            onPickRoast={(roast) => setPrefs((p) => ({ ...p, roast }))}
+            permission={perm}
+            onEnable={async () => {
+              const result = await requestNotifications();
+              setPerm(result);
+              if (result === "granted") showToast("roasts armed 🔥");
+            }}
+          />
+        )}
+
+        {TAB_SCREENS.includes(screen) && (
+          <TabBar active={screen} onGo={(tab: TabScreen) => setScreen(tab)} />
+        )}
+
+        {toast && <Toast message={toast} />}
       </div>
-
-      {open && (
-        <AddSheet
-          onClose={() => setOpen(false)}
-          onAdd={(sub) => {
-            setSubs((prev) => [...prev, sub]);
-            setOpen(false);
-          }}
-        />
-      )}
     </main>
-  );
-}
-
-function AddSheet({ onClose, onAdd }: { onClose: () => void; onAdd: (s: Sub) => void }) {
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [cycle, setCycle] = useState<Cycle>("trial");
-  const [date, setDate] = useState(plusDays(7));
-
-  const valid = name.trim().length > 0 && date;
-
-  return (
-    <div className="fixed inset-0 z-30 flex items-end bg-foreground/40 backdrop-blur-sm">
-      <button className="absolute inset-0" aria-label="Close" onClick={onClose} />
-      <form
-        className="relative w-full rounded-t-3xl border-t bg-card p-5 pb-8 shadow-lift sm:mx-auto sm:max-w-lg sm:rounded-3xl sm:mb-8"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!valid) return;
-          onAdd({
-            id: crypto.randomUUID(),
-            name: name.trim(),
-            amount: Number(amount) || 0,
-            cycle,
-            date,
-          });
-        }}
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold">What are you tracking?</h2>
-          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close">
-            <X className="size-4" />
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              autoFocus
-              placeholder="Streaming service, gym, AI tool…"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                inputMode="decimal"
-                placeholder="9.99"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="date">
-                {cycle === "trial" ? "Trial ends" : "Next charge"}
-              </Label>
-              <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Type</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {CYCLES.map((c) => (
-                <button
-                  key={c.value}
-                  type="button"
-                  onClick={() => setCycle(c.value)}
-                  className={`rounded-xl border px-2 py-2.5 text-sm font-medium transition-colors ${
-                    cycle === c.value
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "bg-background hover:bg-secondary"
-                  }`}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {cycle === "trial" && (
-            <div className="flex flex-wrap gap-2">
-              {[3, 7, 14, 30].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => setDate(plusDays(d))}
-                  className="rounded-full border px-3 py-1 text-xs font-medium hover:bg-secondary"
-                >
-                  {d}-day trial
-                </button>
-              ))}
-            </div>
-          )}
-
-          <Button type="submit" className="w-full" size="lg" disabled={!valid}>
-            Save
-          </Button>
-        </div>
-      </form>
-    </div>
   );
 }

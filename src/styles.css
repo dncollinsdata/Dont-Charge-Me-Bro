@@ -5,8 +5,26 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Titan One", ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand palette — flat hex on purpose, the design is a sticker book. */
+  --color-bro-ink: #111111;
+  --color-bro-sky: #8fd0ff;
+  --color-bro-sky-deep: #bfe3ff;
+  --color-bro-pink: #ff2f8e;
+  --color-bro-pink-deep: #e11d74;
+  --color-bro-yellow: #ffe14d;
+  --color-bro-lime: #a5f56b;
+  --color-bro-steel: #33506b;
+  --color-bro-locked: #dfe9f2;
+
+  /* Hard offset shadows — no blur, the whole look hangs off these. */
+  --shadow-hard-sm: 3px 3px 0 #111111;
+  --shadow-hard: 4px 4px 0 #111111;
+  --shadow-hard-md: 5px 5px 0 #111111;
+  --shadow-hard-lg: 6px 6px 0 #111111;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -43,41 +61,43 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --shadow-soft: 0 1px 2px oklch(0.2 0.03 150 / 0.06), 0 8px 24px oklch(0.2 0.03 150 / 0.08);
-  --shadow-lift: 0 2px 4px oklch(0.2 0.03 150 / 0.08), 0 18px 40px oklch(0.2 0.03 150 / 0.12);
+  --shadow-soft:
+    0 1px 2px oklch(0.2 0.03 150 / 0.06), 0 8px 24px oklch(0.2 0.03 150 / 0.08);
+  --shadow-lift:
+    0 2px 4px oklch(0.2 0.03 150 / 0.08), 0 18px 40px oklch(0.2 0.03 150 / 0.12);
 }
 
 :root {
   --radius: 0.9rem;
-  --background: oklch(0.985 0.008 120);
-  --foreground: oklch(0.19 0.02 150);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.19 0.02 150);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.19 0.02 150);
-  --primary: oklch(0.42 0.13 155);
-  --primary-foreground: oklch(0.985 0.01 120);
-  --secondary: oklch(0.95 0.02 130);
-  --secondary-foreground: oklch(0.28 0.05 155);
-  --muted: oklch(0.955 0.012 120);
-  --muted-foreground: oklch(0.52 0.02 150);
-  --accent: oklch(0.88 0.16 120);
-  --accent-foreground: oklch(0.24 0.06 150);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.985 0.01 120);
-  --warning: oklch(0.78 0.16 70);
-  --warning-foreground: oklch(0.25 0.06 70);
-  --border: oklch(0.9 0.012 130);
-  --input: oklch(0.9 0.012 130);
-  --ring: oklch(0.42 0.13 155);
-  --sidebar: oklch(0.985 0.008 120);
-  --sidebar-foreground: oklch(0.19 0.02 150);
-  --sidebar-primary: oklch(0.42 0.13 155);
-  --sidebar-primary-foreground: oklch(0.985 0.01 120);
-  --sidebar-accent: oklch(0.95 0.02 130);
-  --sidebar-accent-foreground: oklch(0.28 0.05 155);
-  --sidebar-border: oklch(0.9 0.012 130);
-  --sidebar-ring: oklch(0.42 0.13 155);
+  --background: #bfe3ff;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: #ff2f8e;
+  --primary-foreground: #ffffff;
+  --secondary: #ffe14d;
+  --secondary-foreground: #111111;
+  --muted: #dfe9f2;
+  --muted-foreground: #33506b;
+  --accent: #a5f56b;
+  --accent-foreground: #111111;
+  --destructive: #e11d74;
+  --destructive-foreground: #ffffff;
+  --warning: #ffe14d;
+  --warning-foreground: #111111;
+  --border: #111111;
+  --input: #111111;
+  --ring: #ff2f8e;
+  --sidebar: #bfe3ff;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #ff2f8e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ffe14d;
+  --sidebar-accent-foreground: #111111;
+  --sidebar-border: #111111;
+  --sidebar-ring: #ff2f8e;
 }
 
 .dark {
@@ -118,9 +138,10 @@
   }
 
   body {
-    background-color: var(--color-background);
+    background-color: var(--color-bro-sky-deep);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-weight: 800;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -128,11 +149,91 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    font-weight: 400; /* Titan One only ships one weight */
+  }
+
+  input::placeholder {
+    color: #9aa7b5;
+  }
+}
+
+@keyframes bro-wobble {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes bro-pop-in {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
 @utility numeric {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+}
+
+/* Every screen owns its own top inset, so full-bleed screens reach the notch. */
+@utility screen-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+@utility wobble {
+  animation: bro-wobble 2.2s ease-in-out infinite;
+}
+
+@utility wobble-fast {
+  animation: bro-wobble 0.7s ease-in-out infinite;
+}
+
+@utility pop-in {
+  animation: bro-pop-in 0.35s ease-out;
+}
+
+/* The sticker look: 3px ink outline + hard offset shadow. */
+@utility sticker {
+  border: 3px solid var(--color-bro-ink);
+  box-shadow: var(--shadow-hard);
+}
+
+/* Physical press — the sticker slides into its own shadow. */
+@utility press {
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease;
+
+  &:hover:not(:disabled) {
+    transform: translate(2px, 2px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wobble,
+  .wobble-fast,
+  .pop-in {
+    animation: none;
+  }
 }
