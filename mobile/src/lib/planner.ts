@@ -37,6 +37,9 @@ const BUDGET = 60;
 /** How long before the horizon we admit we are running out of ammo. */
 const KEEPALIVE_LEAD_DAYS = 1;
 
+/** Never nag sooner than this, so a keepalive cannot land on top of "now". */
+const KEEPALIVE_MIN_LEAD_MS = 60 * 60 * 1000;
+
 function ladderFor(sub: Sub): Lead[] {
   return sub.cycle === "yearly" ? YEARLY_LADDER : MONTHLY_LADDER;
 }
@@ -122,10 +125,18 @@ export function planRoasts(
   const dropped = roasts.length - kept.length;
   const horizon = kept.length ? kept[kept.length - 1].fireAt : null;
 
+  // A day before the horizon is the right moment to ask for a reload — unless
+  // the budget filled up with roasts that all fire within a day, which puts
+  // that moment in the past. Then the nag is pulled forward to an hour out, and
+  // dropped entirely if even that would land at or after the horizon, where the
+  // roasts themselves are already the reminder.
   let keepalive: Date | null = null;
   if (dropped > 0 && horizon) {
-    keepalive = new Date(horizon);
-    keepalive.setDate(keepalive.getDate() - KEEPALIVE_LEAD_DAYS);
+    const wanted = new Date(horizon);
+    wanted.setDate(wanted.getDate() - KEEPALIVE_LEAD_DAYS);
+    const soonest = new Date(opts.now.getTime() + KEEPALIVE_MIN_LEAD_MS);
+    const at = wanted > soonest ? wanted : soonest;
+    if (at < horizon) keepalive = at;
   }
 
   return { roasts: kept, horizon, dropped, keepalive };

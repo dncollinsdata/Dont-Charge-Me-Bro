@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { roastAction } from "./roast-action";
+import { claimResponse, roastAction } from "./roast-action";
 import type { Row } from "./trials";
 
 const netflix: Row = {
@@ -35,4 +35,20 @@ it("ignores a roast whose sub was already yeeted", () => {
 
 it("ignores a notification carrying no sub, like the keepalive", () => {
   expect(roastAction({}, "default", [netflix])).toEqual({ kind: "ignore" });
+});
+
+it("lets a response be acted on once and only once", () => {
+  expect(claimResponse("launch-response-1")).toBe(true);
+  expect(claimResponse("launch-response-1")).toBe(false);
+});
+
+it("keeps the claim outside any component, so a remount cannot replay a tap", () => {
+  // getLastNotificationResponseAsync keeps returning the response that launched
+  // the app. If the claim lived in a ref, a remount would hand back a fresh
+  // empty set and letItCharge would run a second time for one tap.
+  claimResponse("launch-response-2");
+
+  const afterRemount = claimResponse("launch-response-2");
+
+  expect(afterRemount).toBe(false);
 });

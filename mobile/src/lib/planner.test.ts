@@ -188,4 +188,29 @@ describe("planRoasts", () => {
       "2026-10-25",
     ]);
   });
+
+  it("never raises a keepalive that has already passed", () => {
+    // 60 subs all charging tomorrow fills the budget with moments inside a day,
+    // putting horizon-minus-a-day behind us.
+    const many = Array.from({ length: 60 }, (_, i) =>
+      sub({ id: `s${i}`, name: `Leech ${i}`, date: "2026-08-18" }),
+    );
+    const now = new Date("2026-08-17T21:00:00");
+    const plan = planRoasts(many, { now });
+
+    expect(plan.dropped).toBeGreaterThan(0);
+    expect(plan.keepalive === null || plan.keepalive > now).toBe(true);
+  });
+
+  it("drops the keepalive when there is no room left before the horizon", () => {
+    // Everything that survives fires at 8pm tonight; a "reload me" nag has
+    // nowhere useful to sit, and the roasts themselves are the reminder.
+    const many = Array.from({ length: 60 }, (_, i) =>
+      sub({ id: `s${i}`, name: `Leech ${i}`, date: "2026-08-17" }),
+    );
+    const plan = planRoasts(many, { now: new Date("2026-08-17T19:30:00") });
+
+    expect(at(plan.horizon!)).toBe("2026-08-17 20:00");
+    expect(plan.keepalive).toBeNull();
+  });
 });

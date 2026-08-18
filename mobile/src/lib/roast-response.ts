@@ -1,7 +1,7 @@
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
-import { roastAction } from "./roast-action";
+import { claimResponse, roastAction } from "./roast-action";
 import type { Row } from "./trials";
 
 type Handlers = {
@@ -22,7 +22,6 @@ type Handlers = {
  */
 export function useRoastResponses({ hydrated, rows, letItCharge, showToast }: Handlers) {
   const router = useRouter();
-  const handled = useRef(new Set<string>());
   const queue = useRef<Notifications.NotificationResponse[]>([]);
   const latest = useRef({ hydrated, rows, letItCharge, showToast });
   latest.current = { hydrated, rows, letItCharge, showToast };
@@ -38,8 +37,7 @@ export function useRoastResponses({ hydrated, rows, letItCharge, showToast }: Ha
 
     for (const response of pending) {
       const request = response.notification.request;
-      if (handled.current.has(request.identifier)) continue;
-      handled.current.add(request.identifier);
+      if (!claimResponse(request.identifier)) continue;
 
       const action = roastAction(
         request.content.data ?? {},
