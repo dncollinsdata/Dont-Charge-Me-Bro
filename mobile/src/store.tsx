@@ -10,14 +10,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getPermission, syncRoasts, type SyncResult } from "./lib/notify";
-import { shouldAskForReview } from "./lib/review";
-import { askForReview } from "./lib/store-review";
+import { firePreviewRoast, getPermission, syncRoasts, type SyncResult } from "./lib/notify";
+import { shouldSendPreview } from "./lib/preview";
+import { newStickers } from "./lib/stickers";
 import {
   addWasted,
   advance,
   defaultPrefs,
   monthlyCost,
+  savedBy,
   streakDays,
   toRows,
   todayISO,
@@ -54,6 +55,8 @@ type Store = {
   letItCharge: (row: Row) => void;
   setRoast: (roast: Prefs["roast"]) => void;
   dismissOnboarding: () => void;
+  /** Record that we asked for an App Store review, so we never ask twice. */
+  markReviewAsked: () => void;
 };
 
 const StoreContext = createContext<Store | null>(null);
@@ -82,7 +85,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [coverage, setCoverage] = useState<SyncResult | null>(null);
   const lastSyncDay = useRef<string | null>(null);
-  const seenWins = useRef<number | null>(null);
+  const seenPrefs = useRef<Prefs | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -126,6 +129,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // next foreground rather than written off for the rest of the day.
           lastSyncDay.current = todayISO();
           setCoverage(result);
+
+          // Fired after the sync, never before: syncRoasts cancels everything
+          // pending, so a preview scheduled ahead of it would be wiped out.
+          if (!shouldSendPreview(prefs, subs.length)) return;
+          firePreviewRoast(subs[subs.length - 1], prefs.roast).then((sent) => {
+            if (sent) setPrefs((p) => ({ ...p, previewSent: true }));
+          });
         })
         .catch(() => undefined);
     });
@@ -151,32 +161,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => subscription.remove();
   }, [hydrated, resync]);
 
-  /**
-   * Ask for a review just after bro claims a win — never at a cold launch, and
-   * never after an L, which is the worst imaginable moment to want five stars.
-   * The delay lets the panic modal close and its toast land first.
-   */
-  useEffect(() => {
-    if (!hydrated) return;
-    const previous = seenWins.current;
-    seenWins.current = prefs.wins;
-    // The first pass is just hydration telling us what the count already was.
-    if (previous === null || prefs.wins <= previous) return;
-    if (!shouldAskForReview(prefs)) return;
-
-    const timer = setTimeout(() => {
-      askForReview().then((asked) => {
-        if (asked) setPrefs((p) => ({ ...p, reviewAskedAt: todayISO() }));
-      });
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [hydrated, prefs]);
-
   const showToast = useCallback((message: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast(message);
     toastTimer.current = setTimeout(() => setToast(null), 2600);
   }, []);
+
+  /**
+   * Shout when a sticker is earned. The sticker book used to fill up in silence
+   * and bro only found out by wandering to the Hall of Shame later — an
+   * achievement nobody witnesses is not an achievement. Delayed a beat so it
+   * lands after the screen that caused it has settled.
+   */
+  useEffect(() => {
+    if (!hydrated) return;
+    const previous = seenPrefs.current;
+    seenPrefs.current = prefs;
+    // The first pass is just hydration telling us what was already earned.
+    if (!previous) return;
+
+    const earned = newStickers(previous, prefs);
+    if (earned.length === 0) return;
+    const [first] = earned;
+    const timer = setTimeout(() => showToast(`${first.emoji} ${first.title} UNLOCKED`), 900);
+    return () => clearTimeout(timer);
+  }, [hydrated, prefs, showToast]);
 
   const value: Store = {
     hydrated,
@@ -197,6 +206,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setPrefs((p) => ({
         ...p,
         wins: p.wins + 1,
+        saved: p.saved + savedBy(row.sub),
         closestCall: p.closestCall === null ? row.days : Math.min(p.closestCall, row.days),
       }));
       setSubs((prev) => prev.filter((s) => s.id !== row.sub.id));
@@ -208,6 +218,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     setRoast: (roast) => setPrefs((p) => ({ ...p, roast })),
     dismissOnboarding: () => setPrefs((p) => ({ ...p, onboarded: true })),
+    markReviewAsked: () => setPrefs((p) => ({ ...p, reviewAskedAt: todayISO() })),
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

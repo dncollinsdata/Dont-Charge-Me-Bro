@@ -1,5 +1,6 @@
 import { expect, it } from "vitest";
 import { shouldAskForReview } from "./review";
+import { shouldSendPreview } from "./preview";
 import { defaultPrefs, type Prefs } from "./trials";
 
 function prefs(over: Partial<Prefs> = {}): Prefs {
@@ -27,4 +28,15 @@ it("never asks a second time", () => {
 
 it("still asks a long-time user who passed the threshold before we tracked it", () => {
   expect(shouldAskForReview(prefs({ wins: 40, reviewAskedAt: null }))).toBe(true);
+});
+
+it("previews a roast once bro has something to be roasted about", () => {
+  expect(shouldSendPreview(prefs({ previewSent: false }), 0)).toBe(false);
+  expect(shouldSendPreview(prefs({ previewSent: false }), 1)).toBe(true);
+});
+
+it("never previews twice", () => {
+  // The demo exists so day one feels like the product. After that the real
+  // roasts do the talking.
+  expect(shouldSendPreview(prefs({ previewSent: true }), 3)).toBe(false);
 });

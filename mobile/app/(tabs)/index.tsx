@@ -9,7 +9,7 @@ import { C, F, sticker } from "../../src/theme";
 import { Chip, Heading } from "../../src/ui";
 
 export default function HomeScreen() {
-  const { rows, panic, monthly, streak, yeet, showToast } = useStore();
+  const { rows, panic, monthly, streak, prefs, yeet, showToast } = useStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -47,6 +47,14 @@ export default function HomeScreen() {
             <Text style={styles.panicCtaText}>HANDLE IT RN →</Text>
           </View>
         </Pressable>
+      )}
+
+      {prefs.saved > 0 && (
+        <View style={styles.kept}>
+          <Text style={styles.keptLabel}>KEPT SO FAR 🏆</Text>
+          <Text style={styles.keptValue}>{money(Math.round(prefs.saved))}</Text>
+          <Text style={styles.keptNote}>charges that never landed. because of you. 💅</Text>
+        </View>
       )}
 
       <View style={styles.statRow}>
@@ -155,6 +163,19 @@ const styles = StyleSheet.create({
     ...sticker(3),
   },
   panicCtaText: { fontFamily: F.black, fontSize: 13, color: C.ink },
+  kept: {
+    backgroundColor: C.lime,
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    alignItems: "center",
+    transform: [{ rotate: "-1deg" }],
+    ...sticker(6),
+  },
+  keptLabel: { fontFamily: F.black, fontSize: 11, letterSpacing: 0.8, color: C.ink },
+  keptValue: { fontFamily: F.display, fontSize: 40, color: C.ink, marginTop: 2 },
+  keptNote: { fontFamily: F.bold, fontSize: 12, color: C.steel, marginTop: 2 },
   statRow: { flexDirection: "row", gap: 10, marginBottom: 14 },
   stat: {
     flex: 1,

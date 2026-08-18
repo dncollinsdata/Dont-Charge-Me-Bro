@@ -45,9 +45,11 @@ export default function PanicScreen() {
         label="I CANCELLED IT (W) 🏆"
         textStyle={{ fontSize: 18 }}
         onPress={() => {
-          if (target) yeet(target);
-          close();
-          showToast("CERTIFIED W 🏆 the streak lives");
+          if (!target) return close();
+          const { name, amount } = target.sub;
+          yeet(target);
+          // Straight to the trophy — the W now leaves something behind.
+          router.replace(`/win?name=${encodeURIComponent(name)}&amount=${amount}`);
         }}
       />
 

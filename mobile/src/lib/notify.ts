@@ -8,6 +8,9 @@ import { countdownLabel, dueText, money, type RoastLevel, type Sub } from "./tri
 
 export const ROAST_CATEGORY = "roast";
 
+/** Long enough to leave the ADD screen, short enough to still feel like a reply. */
+const PREVIEW_DELAY_SECONDS = 8;
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -157,6 +160,36 @@ async function runSync(subs: Sub[], level: RoastLevel): Promise<SyncResult> {
  * costs one rebuild instead of five full teardowns.
  */
 export const syncRoasts = coalescing(runSync);
+
+/**
+ * The one-off demo roast, a few seconds after bro's first leech lands.
+ *
+ * Deliberately carries no category and no subId: it must not offer YEET IT or
+ * "charge me ig" buttons, because acting on a demo would record a real win or a
+ * real loss against a charge that is not actually due. It is a showcase, and it
+ * says so.
+ */
+export async function firePreviewRoast(sub: Sub, level: RoastLevel): Promise<boolean> {
+  if ((await getPermission()) !== "granted") return false;
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `${sub.name} charges tomorrow 👀`,
+        subtitle: "PREVIEW · this is what a roast looks like",
+        body: roastLine(level, sub.name, 1, sub.amount),
+        interruptionLevel: "active",
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: PREVIEW_DELAY_SECONDS,
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function scheduledCount() {
   return (await Notifications.getAllScheduledNotificationsAsync()).length;

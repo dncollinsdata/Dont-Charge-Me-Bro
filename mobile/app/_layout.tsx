@@ -45,6 +45,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
             <Stack.Screen name="panic" options={{ presentation: "fullScreenModal" }} />
+            <Stack.Screen name="win" options={{ presentation: "fullScreenModal" }} />
             <Stack.Screen name="receipt" />
           </Stack>
           <Toast />

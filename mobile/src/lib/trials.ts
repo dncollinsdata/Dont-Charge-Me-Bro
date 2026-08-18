@@ -39,6 +39,10 @@ export type Prefs = {
   closestCall: number | null;
   /** ISO day we asked for an App Store review. Null until we have. */
   reviewAskedAt: string | null;
+  /** Every charge bro cancelled before it landed. The number worth bragging about. */
+  saved: number;
+  /** Whether the one-off demo roast has been delivered. */
+  previewSent: boolean;
 };
 
 export function todayISO() {
@@ -54,6 +58,8 @@ export function defaultPrefs(): Prefs {
     wins: 0,
     closestCall: null,
     reviewAskedAt: null,
+    saved: 0,
+    previewSent: false,
   };
 }
 
@@ -118,6 +124,15 @@ export function advance(sub: Sub): Sub {
   const cycle: Cycle = sub.cycle === "trial" ? "monthly" : sub.cycle;
   const next = cycle === "yearly" ? addYears(d, 1) : addMonths(d, 1);
   return { ...sub, cycle, date: iso(next) };
+}
+
+/**
+ * What bro keeps by killing this leech now: the whole charge that would have
+ * landed. Deliberately not `monthlyCost` — a $263.88 annual plan cancelled the
+ * day before it renews saves $263.88, not a twelfth of it.
+ */
+export function savedBy(sub: Sub) {
+  return sub.amount;
 }
 
 /**

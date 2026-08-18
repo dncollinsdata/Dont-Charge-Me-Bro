@@ -2,46 +2,20 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { STICKERS } from "../../src/lib/stickers";
 import { money, ranForLabel } from "../../src/lib/trials";
 import { useStore } from "../../src/store";
 import { C, F, sticker } from "../../src/theme";
 import { Btn, Heading } from "../../src/ui";
 
-type Medal = { emoji: string; title: string; body: string; locked: boolean };
-
 export default function ShameScreen() {
-  const { wasted, wastedTotal, prefs, streak } = useStore();
+  const { wasted, wastedTotal, prefs } = useStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const ranked = [...wasted].sort((a, b) => b.amount - a.amount);
 
-  const medals: Medal[] = [
-    {
-      emoji: "🩸",
-      title: "FIRST BLOOD",
-      body: "cancelled his first trial. a nation wept.",
-      locked: prefs.wins < 1,
-    },
-    {
-      emoji: "✂️",
-      title: "SERIAL YEETER",
-      body: "ten confirmed Ws. companies fear him.",
-      locked: prefs.wins < 10,
-    },
-    {
-      emoji: "🔥",
-      title: "CLOSE CALL",
-      body: "cancelled with 0 days left. absolute cinema.",
-      locked: prefs.closestCall === null || prefs.closestCall > 0,
-    },
-    {
-      emoji: "🏅",
-      title: "FLAWLESS MONTH",
-      body: "30 days, zero charges. locked. for now.",
-      locked: streak < 30,
-    },
-  ];
+  const medals = STICKERS.map((sticker) => ({ ...sticker, locked: !sticker.earned(prefs) }));
 
   return (
     <ScrollView

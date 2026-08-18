@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { advance, nextDate, panicWhen, type Sub } from "./trials";
+import { advance, nextDate, panicWhen, savedBy, type Sub } from "./trials";
 
 function sub(over: Partial<Sub> = {}): Sub {
   return { id: "n", name: "Netflix", amount: 12.99, cycle: "monthly", date: "2026-01-31", ...over };
@@ -26,4 +26,12 @@ it("shouts the countdown for the panic screen's display title", () => {
   expect(panicWhen(1)).toBe("TOMORROW 😬");
   expect(panicWhen(3)).toBe("IN 3 DAYS");
   expect(panicWhen(-2)).toBe("TODAY 💀");
+});
+
+it("counts the whole charge bro dodged, not a monthly slice of it", () => {
+  // monthlyCost divides a yearly by 12 for the DRAIN/MO figure. Savings are the
+  // opposite question: what would actually have left the account.
+  expect(savedBy(sub({ cycle: "monthly", amount: 12.99 }))).toBe(12.99);
+  expect(savedBy(sub({ cycle: "yearly", amount: 263.88 }))).toBe(263.88);
+  expect(savedBy(sub({ cycle: "trial", amount: 8.99 }))).toBe(8.99);
 });
