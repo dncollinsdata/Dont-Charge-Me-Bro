@@ -54,6 +54,21 @@ export function hardShadow(offset = 4): ShadowStyle {
   };
 }
 
+type TextShadowStyle = {
+  textShadowColor: string;
+  textShadowOffset: { width: number; height: number };
+  textShadowRadius: number;
+};
+
+/** Hard offset text shadow — zero radius, same trick as the sticker shadows. */
+export function textShadow(color: string, offset = 3): TextShadowStyle {
+  return {
+    textShadowColor: color,
+    textShadowOffset: { width: offset, height: offset },
+    textShadowRadius: 0,
+  };
+}
+
 export function sticker(offset = 4): StickerStyle {
   return { borderWidth: 3, borderColor: C.ink, ...hardShadow(offset) };
 }

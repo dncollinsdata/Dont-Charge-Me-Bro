@@ -9,7 +9,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
-import { C, F, hardShadow, sticker } from "./theme";
+import { C, F, hardShadow, sticker, textShadow } from "./theme";
 
 const TONES = {
   pink: { bg: C.pink, fg: C.white },
@@ -87,7 +87,17 @@ export function Heading({
   style?: StyleProp<TextStyle>;
 }) {
   return (
-    <Text style={[{ fontFamily: F.display, fontSize: size, color: C.ink }, style]}>{children}</Text>
+    <Text
+      style={[
+        { fontFamily: F.display, fontSize: size, color: C.ink },
+        // The white offset shadow is what lifts Titan One off the sky blue.
+        // Page titles only — the small section headings are flat in the design.
+        size >= 20 && textShadow("#ffffff", size >= 40 ? 4 : 3),
+        style,
+      ]}
+    >
+      {children}
+    </Text>
   );
 }
 
