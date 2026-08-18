@@ -1,6 +1,9 @@
 import { useRouter } from "expo-router";
+import { useRef } from "react";
 import { Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { captureCard } from "../src/lib/share-card";
+import { shameShareText } from "../src/lib/share-text";
 import { money, ranForLabel } from "../src/lib/trials";
 import { useStore } from "../src/store";
 import { C, F, sticker } from "../src/theme";
@@ -24,6 +27,7 @@ export default function ReceiptScreen() {
   const { wasted, wastedTotal, showToast } = useStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const cardRef = useRef<View>(null);
 
   const dateline = new Date().toLocaleDateString(undefined, {
     month: "short",
@@ -32,10 +36,10 @@ export default function ReceiptScreen() {
   });
 
   async function share() {
+    const message = shameShareText(wastedTotal);
+    const url = await captureCard(cardRef);
     try {
-      await Share.share({
-        message: `I have donated ${money(Math.round(wastedTotal))} to companies I forgot about. Don't Charge Me Bro 🧾`,
-      });
+      await Share.share(url ? { message, url } : { message });
     } catch {
       showToast("couldn't share that L 😔");
     }
@@ -50,6 +54,7 @@ export default function ReceiptScreen() {
         <Text style={styles.back}>← hall of shame</Text>
       </Pressable>
 
+      <View ref={cardRef} collapsable={false} style={styles.shot}>
       <View style={styles.receipt}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>OFFICIAL L RECEIPT 🧾</Text>
@@ -84,6 +89,7 @@ export default function ReceiptScreen() {
 
         <Text style={styles.footer}>keep for your records. or don't. you won't. 🫡</Text>
       </View>
+      </View>
 
       <Btn tone="pink" label="SHARE THIS L 📤" onPress={share} textStyle={{ fontSize: 16 }} />
     </ScrollView>
@@ -94,6 +100,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.sky },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   back: { fontFamily: F.black, fontSize: 13, color: C.steel },
+  shot: { backgroundColor: C.sky, paddingVertical: 6, paddingHorizontal: 4 },
   receipt: {
     backgroundColor: C.white,
     borderRadius: 6,

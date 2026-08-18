@@ -1,8 +1,11 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRef } from "react";
 import { Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PopIn, Wobble } from "../src/anim";
 import { shouldAskForReview } from "../src/lib/review";
+import { captureCard } from "../src/lib/share-card";
+import { winShareText } from "../src/lib/share-text";
 import { askForReview } from "../src/lib/store-review";
 import { money } from "../src/lib/trials";
 import { useStore } from "../src/store";
@@ -19,15 +22,16 @@ export default function WinScreen() {
   const { name, amount } = useLocalSearchParams<{ name?: string; amount?: string }>();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const cardRef = useRef<View>(null);
 
   const rescued = Number(amount ?? 0);
   const leech = name ?? "that leech";
 
   async function share() {
+    const message = winShareText(leech, rescued, prefs.saved);
+    const url = await captureCard(cardRef);
     try {
-      await Share.share({
-        message: `just cancelled ${leech} before it charged me ${money(rescued)}. ${money(Math.round(prefs.saved))} kept from companies I forgot about 🏆 Don't Charge Me Bro`,
-      });
+      await Share.share(url ? { message, url } : { message });
     } catch {
       showToast("couldn't share that W 😔");
     }
@@ -52,30 +56,32 @@ export default function WinScreen() {
     <View
       style={[styles.screen, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}
     >
-      <Wobble duration={800}>
-        <Text style={styles.trophy}>🏆</Text>
-      </Wobble>
+      <View ref={cardRef} collapsable={false} style={styles.shot}>
+        <Wobble duration={800}>
+          <Text style={styles.trophy}>🏆</Text>
+        </Wobble>
 
-      <PopIn duration={400}>
-        <Text style={styles.title}>CERTIFIED{"\n"}W</Text>
-      </PopIn>
+        <PopIn duration={400}>
+          <Text style={styles.title}>CERTIFIED{"\n"}W</Text>
+        </PopIn>
 
-      <View style={styles.card}>
-        <Text style={styles.kept}>{money(rescued)}</Text>
-        <Text style={styles.keptNote}>
-          kept from {leech}. it never even touched the account. 💅
-        </Text>
+        <View style={styles.card}>
+          <Text style={styles.kept}>{money(rescued)}</Text>
+          <Text style={styles.keptNote}>
+            kept from {leech}. it never even touched the account. 💅
+          </Text>
 
-        <View style={styles.rule} />
+          <View style={styles.rule} />
 
-        <View style={styles.statRow}>
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>KEPT ALL TIME</Text>
-            <Text style={styles.statValue}>{money(Math.round(prefs.saved))}</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>W STREAK</Text>
-            <Text style={styles.statValue}>{streak}d</Text>
+          <View style={styles.statRow}>
+            <View style={styles.stat}>
+              <Text style={styles.statLabel}>KEPT ALL TIME</Text>
+              <Text style={styles.statValue}>{money(Math.round(prefs.saved))}</Text>
+            </View>
+            <View style={styles.stat}>
+              <Text style={styles.statLabel}>W STREAK</Text>
+              <Text style={styles.statValue}>{streak}d</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -96,6 +102,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 24,
   },
+  // The captured region. Carries its own background so the shared PNG is not
+  // transparent where the screen's colour would have been.
+  shot: { backgroundColor: C.lime, paddingTop: 10, paddingBottom: 18, paddingHorizontal: 4 },
   trophy: { fontSize: 40, textAlign: "center" },
   title: {
     fontFamily: F.display,
@@ -114,7 +123,6 @@ const styles = StyleSheet.create({
     backgroundColor: C.white,
     borderRadius: 18,
     padding: 18,
-    marginBottom: 22,
     transform: [{ rotate: "1deg" }],
     ...sticker(6),
   },
