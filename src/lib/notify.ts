@@ -1,4 +1,5 @@
-import { countdownLabel, money, todayISO } from "./trials";
+import { roastLine } from "./roasts";
+import { countdownLabel, todayISO, type RoastLevel } from "./trials";
 
 const SEEN_KEY = "dontcharge.notified.v1";
 
@@ -6,7 +7,8 @@ export function notificationsSupported() {
   return typeof window !== "undefined" && "Notification" in window;
 }
 
-export function notificationPermission(): NotificationPermission | "unsupported" {
+export function notificationPermission():
+  NotificationPermission | "unsupported" {
   if (!notificationsSupported()) return "unsupported";
   return Notification.permission;
 }
@@ -33,11 +35,13 @@ function saveSeen(seen: Record<string, string>) {
   }
 }
 
-/** Fire one notification per item per day for anything charging within 3 days. */
+/** Fire one roast per item per day for anything charging within 3 days. */
 export function notifyExpiring(
   items: { id: string; name: string; amount: number; days: number }[],
+  roast: RoastLevel = "unhinged",
 ) {
-  if (!notificationsSupported() || Notification.permission !== "granted") return;
+  if (!notificationsSupported() || Notification.permission !== "granted")
+    return;
   const seen = loadSeen();
   const today = todayISO();
   let changed = false;
@@ -48,7 +52,7 @@ export function notifyExpiring(
     seen[item.id] = today;
     changed = true;
     new Notification(`${item.name} charges ${countdownLabel(item.days)}`, {
-      body: `${money(item.amount)} will be taken unless you cancel.`,
+      body: roastLine(roast, item.name, item.days, item.amount),
       tag: `dontcharge-${item.id}-${today}`,
     });
   }

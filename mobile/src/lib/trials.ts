@@ -6,7 +6,13 @@ export type Sub = {
   amount: number;
   cycle: Cycle;
   date: string; // ISO yyyy-mm-dd of the next charge / trial end
-  cancelUrl?: string;
+};
+
+/** A subscription resolved against today — what every screen actually renders. */
+export type Row = {
+  sub: Sub;
+  date: string;
+  days: number;
 };
 
 /** One company that got paid because bro forgot. Grows each time a charge lands. */
@@ -15,13 +21,6 @@ export type WastedEntry = {
   name: string;
   periods: number;
   amount: number;
-};
-
-/** A subscription resolved against today — what every screen actually renders. */
-export type Row = {
-  sub: Sub;
-  date: string;
-  days: number;
 };
 
 export type RoastLevel = "mild" | "medium" | "unhinged";
@@ -37,44 +36,9 @@ export type Prefs = {
   closestCall: number | null;
 };
 
-const KEY = "dontcharge.subs.v1";
-const WASTED_KEY = "dontcharge.wasted.v1";
-const PREFS_KEY = "dontcharge.prefs.v1";
-
-export function loadSubs(): Sub[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as Sub[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveSubs(subs: Sub[]) {
-  try {
-    window.localStorage.setItem(KEY, JSON.stringify(subs));
-  } catch {
-    /* ignore */
-  }
-}
-
-export function loadWasted(): WastedEntry[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(WASTED_KEY);
-    return raw ? (JSON.parse(raw) as WastedEntry[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveWasted(wasted: WastedEntry[]) {
-  try {
-    window.localStorage.setItem(WASTED_KEY, JSON.stringify(wasted));
-  } catch {
-    /* ignore */
-  }
+export function todayISO() {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
 export function defaultPrefs(): Prefs {
@@ -87,37 +51,16 @@ export function defaultPrefs(): Prefs {
   };
 }
 
-export function loadPrefs(): Prefs {
-  if (typeof window === "undefined") return defaultPrefs();
-  try {
-    const raw = window.localStorage.getItem(PREFS_KEY);
-    return raw
-      ? { ...defaultPrefs(), ...(JSON.parse(raw) as Partial<Prefs>) }
-      : defaultPrefs();
-  } catch {
-    return defaultPrefs();
-  }
-}
-
-export function savePrefs(prefs: Prefs) {
-  try {
-    window.localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
-  } catch {
-    /* ignore */
-  }
-}
-
-export function todayISO() {
-  const d = new Date();
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 10);
-}
-
 export function daysUntil(iso: string) {
   const a = new Date(todayISO() + "T00:00:00");
   const b = new Date(iso + "T00:00:00");
   return Math.round((b.getTime() - a.getTime()) / 86400000);
+}
+
+export function plusDays(n: number) {
+  const d = new Date(todayISO() + "T00:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
 }
 
 /** Roll a past recurring date forward so the list always shows the NEXT charge. */
@@ -161,13 +104,6 @@ export function money(n: number) {
   });
 }
 
-export function formatDate(iso: string) {
-  return new Date(iso + "T00:00:00").toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-}
-
 export function countdownLabel(days: number) {
   if (days < 0) return "overdue";
   if (days === 0) return "today";
@@ -175,22 +111,16 @@ export function countdownLabel(days: number) {
   return `in ${days} days`;
 }
 
-export function plusDays(n: number) {
-  const d = new Date(todayISO() + "T00:00:00");
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-}
-
-/** Days survived without letting a charge through. */
-export function streakDays(streakSince: string) {
-  return Math.max(0, -daysUntil(streakSince));
-}
-
 /** Loud countdown for the leech list. */
 export function dueText(days: number) {
   if (days <= 0) return "TODAY 💀";
   if (days === 1) return "tomorrow 😬";
   return `${days} days`;
+}
+
+/** Days survived without letting a charge through. */
+export function streakDays(streakSince: string) {
+  return Math.max(0, -daysUntil(streakSince));
 }
 
 export function ranForLabel(entry: WastedEntry) {
@@ -202,13 +132,18 @@ export function addWasted(wasted: WastedEntry[], sub: Sub): WastedEntry[] {
   const existing = wasted.find((w) => w.id === sub.id);
   if (existing) {
     return wasted.map((w) =>
-      w.id === sub.id
-        ? { ...w, periods: w.periods + 1, amount: w.amount + sub.amount }
-        : w,
+      w.id === sub.id ? { ...w, periods: w.periods + 1, amount: w.amount + sub.amount } : w,
     );
   }
-  return [
-    ...wasted,
-    { id: sub.id, name: sub.name, periods: 1, amount: sub.amount },
-  ];
+  return [...wasted, { id: sub.id, name: sub.name, periods: 1, amount: sub.amount }];
+}
+
+/** Resolve every sub against today, soonest charge first. */
+export function toRows(subs: Sub[]): Row[] {
+  return subs
+    .map((sub) => {
+      const date = nextDate(sub);
+      return { sub, date, days: daysUntil(date) };
+    })
+    .sort((a, b) => a.days - b.days);
 }
