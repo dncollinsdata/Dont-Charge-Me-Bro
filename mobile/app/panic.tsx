@@ -1,16 +1,21 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PopIn, Wobble } from "../src/anim";
-import { money } from "../src/lib/trials";
+import { money, panicWhen, type Row } from "../src/lib/trials";
 import { useStore } from "../src/store";
 import { C, F, sticker } from "../src/theme";
 import { Btn } from "../src/ui";
 
 export default function PanicScreen() {
-  const { panic, yeet, letItCharge, showToast } = useStore();
+  const { rows, panic, yeet, letItCharge, showToast } = useStore();
+  const { subId, from } = useLocalSearchParams<{ subId?: string; from?: string }>();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
+  // Arriving from a roast means panicking about that specific leech; arriving
+  // from the tab bar means panicking about whatever charges today.
+  const target = subId ? (rows.find((r) => r.sub.id === subId) ?? null) : panic;
 
   function close() {
     if (router.canGoBack()) router.back();
@@ -25,17 +30,14 @@ export default function PanicScreen() {
 
       <PopIn duration={400}>
         <Text style={styles.title}>
-          {panic ? panic.sub.name.toUpperCase() : "NOTHING"}
-          {"\n"}CHARGES{"\n"}TODAY 💀
+          {target ? target.sub.name.toUpperCase() : "NOTHING"}
+          {"\n"}CHARGES{"\n"}
+          {target ? panicWhen(target.days) : "TODAY 💀"}
         </Text>
       </PopIn>
 
       <View style={styles.body}>
-        <Text style={styles.bodyText}>
-          {panic
-            ? `${money(panic.sub.amount)} leaves the account at midnight. the free trial bro SWORE he'd remember?? it's here. this is NOT a drill. this is a DEBIT. 🗣️`
-            : "crisis averted. nothing charges today."}
-        </Text>
+        <Text style={styles.bodyText}>{bodyCopy(target)}</Text>
       </View>
 
       <Btn
@@ -43,11 +45,15 @@ export default function PanicScreen() {
         label="I CANCELLED IT (W) 🏆"
         textStyle={{ fontSize: 18 }}
         onPress={() => {
-          if (panic) yeet(panic);
+          if (target) yeet(target);
           close();
           showToast("CERTIFIED W 🏆 the streak lives");
         }}
       />
+
+      {from === "roast" && target && (
+        <Text style={styles.check}>you actually cancelled it, right? 👀</Text>
+      )}
 
       <Pressable
         accessibilityRole="button"
@@ -56,7 +62,7 @@ export default function PanicScreen() {
         style={styles.acceptHit}
         hitSlop={8}
         onPress={() => {
-          if (panic) letItCharge(panic);
+          if (target) letItCharge(target);
           close();
           showToast("streak: deceased 🪦 rip");
         }}
@@ -65,6 +71,20 @@ export default function PanicScreen() {
       </Pressable>
     </View>
   );
+}
+
+/**
+ * The midnight line is only true on the day itself. A roast three days out has
+ * to sound urgent without claiming a deadline that has not arrived.
+ */
+function bodyCopy(target: Row | null) {
+  if (!target) return "crisis averted. nothing charges today.";
+  const amount = money(target.sub.amount);
+  if (target.days <= 0) {
+    return `${amount} leaves the account at midnight. the free trial bro SWORE he'd remember?? it's here. this is NOT a drill. this is a DEBIT. 🗣️`;
+  }
+  const days = target.days === 1 ? "tomorrow" : `in ${target.days} days`;
+  return `${amount} goes out ${days}. bro SWORE he'd cancel this one. the clock is running and it does not care. handle it NOW. 🗣️`;
 }
 
 const styles = StyleSheet.create({
@@ -108,6 +128,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     alignSelf: "center",
+  },
+  check: {
+    fontFamily: F.black,
+    fontSize: 13,
+    color: C.white,
+    textAlign: "center",
+    marginTop: 14,
+    opacity: 0.9,
   },
   accept: {
     fontFamily: F.black,

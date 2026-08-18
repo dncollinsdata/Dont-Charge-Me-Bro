@@ -2,25 +2,20 @@ import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { chipColor } from "../../src/lib/chips";
-import { getPermission, requestPermission, scheduledCount, syncRoasts } from "../../src/lib/notify";
+import { getPermission, requestPermission, type SyncResult } from "../../src/lib/notify";
 import { roastLine, ROAST_LEVELS } from "../../src/lib/roasts";
 import { useStore } from "../../src/store";
 import { C, F, sticker } from "../../src/theme";
 import { Btn, Chip, FieldLabel, Heading, Segmented } from "../../src/ui";
 
 export default function RoastsScreen() {
-  const { rows, prefs, setRoast, showToast } = useStore();
+  const { rows, prefs, setRoast, showToast, coverage, resyncRoasts } = useStore();
   const insets = useSafeAreaInsets();
   const [permission, setPermission] = useState<string | null>(null);
-  const [queued, setQueued] = useState(0);
 
   useEffect(() => {
     getPermission().then(setPermission);
   }, []);
-
-  useEffect(() => {
-    if (permission === "granted") scheduledCount().then(setQueued);
-  }, [permission, rows, prefs.roast]);
 
   const preview = rows.slice(0, 4);
 
@@ -31,7 +26,8 @@ export default function RoastsScreen() {
     >
       <Heading style={styles.title}>THE ROASTS 🔔</Heading>
       <Text style={styles.sub}>
-        delivered at 9am, 3 days out, 1 day out, and the morning of. bro's most vulnerable hour.
+        9am at 3 days, 1 day and the morning of — then an 8pm last call, while the money is still
+        yours. yearly plans get two weeks' notice.
       </Text>
 
       {permission !== "granted" && (
@@ -52,8 +48,7 @@ export default function RoastsScreen() {
                 const status = await requestPermission();
                 setPermission(status);
                 if (status === "granted") {
-                  const n = await syncRoasts(rows, prefs.roast);
-                  setQueued(n);
+                  resyncRoasts();
                   showToast("roasts armed 🔥");
                 }
               }}
@@ -64,11 +59,7 @@ export default function RoastsScreen() {
 
       {permission === "granted" && (
         <View style={styles.armed}>
-          <Text style={styles.armedText}>
-            {queued > 0
-              ? `${queued} roast${queued === 1 ? "" : "s"} queued up 🔥 they fire even if the app is closed.`
-              : "armed and waiting. add a leech and we'll schedule the roasts. 🔥"}
-          </Text>
+          <Text style={styles.armedText}>{coverageText(coverage)}</Text>
         </View>
       )}
 
@@ -104,6 +95,32 @@ export default function RoastsScreen() {
       </View>
     </ScrollView>
   );
+}
+
+/**
+ * Coverage is finite — iOS allows 64 pending notifications and we budget under
+ * it — so say how far it actually reaches instead of implying it is forever.
+ */
+function coverageText(coverage: SyncResult | null) {
+  if (!coverage || (coverage.scheduled === 0 && coverage.failed === 0)) {
+    return "armed and waiting. add a leech and we'll schedule the roasts. 🔥";
+  }
+  // Never report readiness we do not have. A schedule that failed to arm once
+  // reported four roasts out of sixty and looked perfectly healthy doing it.
+  if (coverage.scheduled === 0) {
+    return "the roasts would NOT arm 💀 something's wrong — check notifications in Settings.";
+  }
+
+  const through = coverage.horizon?.toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+  });
+  const armed = `${coverage.scheduled} roast${coverage.scheduled === 1 ? "" : "s"} queued up 🔥 they fire even if the app is closed.`;
+  const missing = coverage.failed > 0 ? ` ${coverage.failed} wouldn't arm 💀` : "";
+  if (!through) return `${armed}${missing}`;
+  return coverage.dropped > 0
+    ? `${armed}${missing} covered through ${through} — open me now and then to reload.`
+    : `${armed}${missing} covered through ${through}.`;
 }
 
 const styles = StyleSheet.create({

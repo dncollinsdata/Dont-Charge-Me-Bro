@@ -25,6 +25,9 @@ export type WastedEntry = {
 
 export type RoastLevel = "mild" | "medium" | "unhinged";
 
+/** Which rung of the ladder a roast sits on — drives its copy and its card. */
+export type RoastTone = "headsUp" | "morningOf" | "lastCall";
+
 export type Prefs = {
   onboarded: boolean;
   roast: RoastLevel;
@@ -63,17 +66,44 @@ export function plusDays(n: number) {
   return d.toISOString().slice(0, 10);
 }
 
+export function iso(d: Date) {
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+/**
+ * Add months, clamping to the end of a short month. Plain `setMonth` spills a
+ * Jan 31 charge into March 3, which skips February's charge altogether — the
+ * one month bro most needed warning about.
+ */
+export function addMonths(from: Date, n: number): Date {
+  const d = new Date(from.getTime());
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, lastDay));
+  return d;
+}
+
+/** Add years, clamping Feb 29 onto Feb 28 rather than spilling into March. */
+export function addYears(from: Date, n: number): Date {
+  return addMonths(from, n * 12);
+}
+
 /** Roll a past recurring date forward so the list always shows the NEXT charge. */
 export function nextDate(sub: Sub): string {
   if (sub.cycle === "trial") return sub.date;
-  const d = new Date(sub.date + "T00:00:00");
+  const anchor = new Date(sub.date + "T00:00:00");
   const now = new Date(todayISO() + "T00:00:00");
-  let guard = 0;
-  while (d < now && guard++ < 400) {
-    if (sub.cycle === "monthly") d.setMonth(d.getMonth() + 1);
-    else d.setFullYear(d.getFullYear() + 1);
+  // Every step is measured from the original anchor, so a 31st charge stays on
+  // the 31st in the months that have one instead of ratcheting down to the 28th.
+  let step = 0;
+  let d = anchor;
+  while (d < now && step < 400) {
+    step++;
+    d = sub.cycle === "monthly" ? addMonths(anchor, step) : addYears(anchor, step);
   }
-  return d.toISOString().slice(0, 10);
+  return iso(d);
 }
 
 /**
@@ -83,9 +113,8 @@ export function nextDate(sub: Sub): string {
 export function advance(sub: Sub): Sub {
   const d = new Date(nextDate(sub) + "T00:00:00");
   const cycle: Cycle = sub.cycle === "trial" ? "monthly" : sub.cycle;
-  if (cycle === "yearly") d.setFullYear(d.getFullYear() + 1);
-  else d.setMonth(d.getMonth() + 1);
-  return { ...sub, cycle, date: d.toISOString().slice(0, 10) };
+  const next = cycle === "yearly" ? addYears(d, 1) : addMonths(d, 1);
+  return { ...sub, cycle, date: iso(next) };
 }
 
 /**
@@ -116,6 +145,13 @@ export function dueText(days: number) {
   if (days <= 0) return "TODAY 💀";
   if (days === 1) return "tomorrow 😬";
   return `${days} days`;
+}
+
+/** Countdown for the panic screen's display title, where `dueText` is too quiet. */
+export function panicWhen(days: number) {
+  if (days <= 0) return "TODAY 💀";
+  if (days === 1) return "TOMORROW 😬";
+  return `IN ${days} DAYS`;
 }
 
 /** Days survived without letting a charge through. */
