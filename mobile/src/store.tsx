@@ -11,6 +11,8 @@ import {
   type ReactNode,
 } from "react";
 import { getPermission, syncRoasts, type SyncResult } from "./lib/notify";
+import { shouldAskForReview } from "./lib/review";
+import { askForReview } from "./lib/store-review";
 import {
   addWasted,
   advance,
@@ -80,6 +82,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [coverage, setCoverage] = useState<SyncResult | null>(null);
   const lastSyncDay = useRef<string | null>(null);
+  const seenWins = useRef<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -147,6 +150,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
     return () => subscription.remove();
   }, [hydrated, resync]);
+
+  /**
+   * Ask for a review just after bro claims a win — never at a cold launch, and
+   * never after an L, which is the worst imaginable moment to want five stars.
+   * The delay lets the panic modal close and its toast land first.
+   */
+  useEffect(() => {
+    if (!hydrated) return;
+    const previous = seenWins.current;
+    seenWins.current = prefs.wins;
+    // The first pass is just hydration telling us what the count already was.
+    if (previous === null || prefs.wins <= previous) return;
+    if (!shouldAskForReview(prefs)) return;
+
+    const timer = setTimeout(() => {
+      askForReview().then((asked) => {
+        if (asked) setPrefs((p) => ({ ...p, reviewAskedAt: todayISO() }));
+      });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [hydrated, prefs]);
 
   const showToast = useCallback((message: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);

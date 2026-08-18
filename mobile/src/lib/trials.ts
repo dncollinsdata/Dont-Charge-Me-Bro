@@ -37,6 +37,8 @@ export type Prefs = {
   wins: number;
   /** Fewest days left at the moment of a cancel — null until the first win. */
   closestCall: number | null;
+  /** ISO day we asked for an App Store review. Null until we have. */
+  reviewAskedAt: string | null;
 };
 
 export function todayISO() {
@@ -51,6 +53,7 @@ export function defaultPrefs(): Prefs {
     streakSince: todayISO(),
     wins: 0,
     closestCall: null,
+    reviewAskedAt: null,
   };
 }
 
