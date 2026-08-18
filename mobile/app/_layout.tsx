@@ -5,8 +5,10 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { FullWindowOverlay } from "react-native-screens";
+import { PopIn } from "../src/anim";
 import { C, F, sticker } from "../src/theme";
 import { StoreProvider, useStore } from "../src/store";
 
@@ -31,18 +33,20 @@ export default function RootLayout() {
       <StoreProvider>
         <StatusBar style="dark" />
         <OnboardingGate />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: C.sky },
-          }}
-        >
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
-          <Stack.Screen name="panic" options={{ presentation: "fullScreenModal" }} />
-          <Stack.Screen name="receipt" />
-        </Stack>
-        <Toast />
+        <View style={{ flex: 1 }}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: C.sky },
+            }}
+          >
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
+            <Stack.Screen name="panic" options={{ presentation: "fullScreenModal" }} />
+            <Stack.Screen name="receipt" />
+          </Stack>
+          <Toast />
+        </View>
       </StoreProvider>
     </SafeAreaProvider>
   );
@@ -64,15 +68,34 @@ function OnboardingGate() {
   return null;
 }
 
+/**
+ * Anything rendered as a sibling of expo-router's <Stack> is invisible on iOS:
+ * react-native-screens hosts the navigator in a native container that covers it,
+ * and no amount of zIndex helps. FullWindowOverlay is the escape hatch — it
+ * renders into a UIWindow above the whole navigation hierarchy.
+ */
+function ToastHost({ children }: { children: React.ReactNode }) {
+  if (Platform.OS !== "ios") return <>{children}</>;
+  return (
+    <FullWindowOverlay>
+      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+        {children}
+      </View>
+    </FullWindowOverlay>
+  );
+}
+
 function Toast() {
   const { toast } = useStore();
   if (!toast) return null;
   return (
-    <View pointerEvents="none" style={styles.toastWrap}>
-      <View style={styles.toast}>
-        <Text style={styles.toastText}>{toast}</Text>
-      </View>
-    </View>
+    <ToastHost>
+      <PopIn duration={300} style={styles.toastWrap}>
+        <View pointerEvents="none" style={styles.toast}>
+          <Text style={styles.toastText}>{toast}</Text>
+        </View>
+      </PopIn>
+    </ToastHost>
   );
 }
 

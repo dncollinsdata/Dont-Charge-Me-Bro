@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Wobble } from "../src/anim";
 import { C, F, sticker } from "../src/theme";
 import { useStore } from "../src/store";
 import { Btn, Heading } from "../src/ui";
@@ -10,9 +11,9 @@ export default function Onboarding() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 24 }]}>
-      <View style={styles.badge}>
+      <Wobble style={styles.badge} duration={2200}>
         <Text style={styles.badgeText}>100%{"\n"}FREE FR</Text>
-      </View>
+      </Wobble>
 
       <Heading size={44} style={styles.title}>
         DON'T{"\n"}CHARGE{"\n"}

@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PopIn, Wobble } from "../src/anim";
 import { money } from "../src/lib/trials";
 import { useStore } from "../src/store";
 import { C, F, sticker } from "../src/theme";
@@ -18,12 +19,16 @@ export default function PanicScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}>
-      <Text style={styles.siren}>🚨</Text>
+      <Wobble duration={700}>
+        <Text style={styles.siren}>🚨</Text>
+      </Wobble>
 
-      <Text style={styles.title}>
-        {panic ? panic.sub.name.toUpperCase() : "NOTHING"}
-        {"\n"}CHARGES{"\n"}TODAY 💀
-      </Text>
+      <PopIn duration={400}>
+        <Text style={styles.title}>
+          {panic ? panic.sub.name.toUpperCase() : "NOTHING"}
+          {"\n"}CHARGES{"\n"}TODAY 💀
+        </Text>
+      </PopIn>
 
       <View style={styles.body}>
         <Text style={styles.bodyText}>

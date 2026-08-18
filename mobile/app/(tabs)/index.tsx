@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Wobble } from "../../src/anim";
 import { chipColor } from "../../src/lib/chips";
 import { dueText, money, type Row } from "../../src/lib/trials";
 import { useStore } from "../../src/store";
@@ -23,9 +24,9 @@ export default function HomeScreen() {
           <Text style={{ color: C.pink }}>ME BRO!!</Text>
         </Heading>
         {panic && (
-          <View style={styles.alertBadge}>
+          <Wobble style={styles.alertBadge} duration={2000}>
             <Text style={styles.alertText}>SCAM{"\n"}ALERT!</Text>
-          </View>
+          </Wobble>
         )}
       </View>
 
