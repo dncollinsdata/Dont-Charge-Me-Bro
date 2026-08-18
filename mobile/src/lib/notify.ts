@@ -1,5 +1,6 @@
 import * as Notifications from "expo-notifications";
 import { cardFor, resetCards } from "./cards";
+import { coalescing } from "./coalesce";
 import { planRoasts, type PlannedRoast } from "./planner";
 import { ACTION_ALLOW, ACTION_YEET } from "./roast-action";
 import { roastLine } from "./roasts";
@@ -48,7 +49,12 @@ function ensureCategory() {
       buttonTitle: "charge me ig… (L)",
       options: { opensAppToForeground: true, isDestructive: true },
     },
-  ]).catch(() => undefined);
+  ]).catch(() => {
+    // Clearing the memo lets the next sync try again. Left cached, one failed
+    // registration would ship every roast with a categoryIdentifier iOS does
+    // not know — delivering them with no buttons at all, silently, all session.
+    category = null;
+  });
   return category;
 }
 
@@ -78,15 +84,26 @@ function contentFor(
 
 export type SyncResult = {
   scheduled: number;
+  /**
+   * Roasts iOS refused. Anything above zero means the schedule is quietly
+   * shorter than planned — the shape of failure that once armed 4 roasts out of
+   * 60 while the app cheerfully reported it was ready.
+   */
+  failed: number;
   /** Roasts the budget could not fit. Non-zero means coverage runs short. */
   dropped: number;
   /** How far coverage actually reaches. */
   horizon: Date | null;
 };
 
-const EMPTY: SyncResult = { scheduled: 0, dropped: 0, horizon: null };
+const EMPTY: SyncResult = { scheduled: 0, failed: 0, dropped: 0, horizon: null };
 
-async function runSync(subs: Sub[], level: RoastLevel, now: Date): Promise<SyncResult> {
+async function runSync(subs: Sub[], level: RoastLevel): Promise<SyncResult> {
+  // Taken here rather than at call time: a coalesced run can start well after
+  // the call that asked for it, and planning against a stale clock schedules
+  // moments that have already gone by.
+  const now = new Date();
+
   if ((await getPermission()) !== "granted") return EMPTY;
   await ensureCategory();
 
@@ -97,6 +114,7 @@ async function runSync(subs: Sub[], level: RoastLevel, now: Date): Promise<SyncR
 
   const plan = planRoasts(subs, { now });
   let scheduled = 0;
+  let failed = 0;
 
   for (const roast of plan.roasts) {
     try {
@@ -106,7 +124,9 @@ async function runSync(subs: Sub[], level: RoastLevel, now: Date): Promise<SyncR
       });
       scheduled++;
     } catch {
-      // One roast that refuses to schedule must not cost us the rest of them.
+      // One roast that refuses to schedule must not cost us the rest of them,
+      // but the count has to come back so the miss is visible.
+      failed++;
     }
   }
 
@@ -125,26 +145,18 @@ async function runSync(subs: Sub[], level: RoastLevel, now: Date): Promise<SyncR
     }
   }
 
-  return { scheduled, dropped: plan.dropped, horizon: plan.horizon };
+  return { scheduled, failed, dropped: plan.dropped, horizon: plan.horizon };
 }
 
-// Sync is cancel-then-schedule, so two overlapping runs could interleave one
-// run's cancel into the other's schedule. Queue them instead.
-let chain: Promise<unknown> = Promise.resolve();
-
-/** Rebuild the whole schedule from the current subs. */
-export function syncRoasts(
-  subs: Sub[],
-  level: RoastLevel,
-  now: Date = new Date(),
-): Promise<SyncResult> {
-  const run = chain.then(
-    () => runSync(subs, level, now),
-    () => runSync(subs, level, now),
-  );
-  chain = run.catch(() => undefined);
-  return run;
-}
+/**
+ * Rebuild the whole schedule from the current subs.
+ *
+ * Sync is cancel-then-schedule, so overlapping runs must never interleave one
+ * run's cancel into another's schedule. Coalescing rather than merely queueing
+ * also means a burst of changes — bro adding five subscriptions in a row —
+ * costs one rebuild instead of five full teardowns.
+ */
+export const syncRoasts = coalescing(runSync);
 
 export async function scheduledCount() {
   return (await Notifications.getAllScheduledNotificationsAsync()).length;

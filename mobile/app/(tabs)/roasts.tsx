@@ -99,18 +99,25 @@ export default function RoastsScreen() {
  * it — so say how far it actually reaches instead of implying it is forever.
  */
 function coverageText(coverage: SyncResult | null) {
-  if (!coverage || coverage.scheduled === 0) {
+  if (!coverage || (coverage.scheduled === 0 && coverage.failed === 0)) {
     return "armed and waiting. add a leech and we'll schedule the roasts. 🔥";
   }
+  // Never report readiness we do not have. A schedule that failed to arm once
+  // reported four roasts out of sixty and looked perfectly healthy doing it.
+  if (coverage.scheduled === 0) {
+    return "the roasts would NOT arm 💀 something's wrong — check notifications in Settings.";
+  }
+
   const through = coverage.horizon?.toLocaleDateString(undefined, {
     month: "long",
     day: "numeric",
   });
   const armed = `${coverage.scheduled} roast${coverage.scheduled === 1 ? "" : "s"} queued up 🔥 they fire even if the app is closed.`;
-  if (!through) return armed;
+  const missing = coverage.failed > 0 ? ` ${coverage.failed} wouldn't arm 💀` : "";
+  if (!through) return `${armed}${missing}`;
   return coverage.dropped > 0
-    ? `${armed} covered through ${through} — open me now and then to reload.`
-    : `${armed} covered through ${through}.`;
+    ? `${armed}${missing} covered through ${through} — open me now and then to reload.`
+    : `${armed}${missing} covered through ${through}.`;
 }
 
 const styles = StyleSheet.create({
