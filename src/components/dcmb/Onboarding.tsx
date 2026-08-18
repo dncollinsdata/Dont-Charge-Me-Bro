@@ -9,6 +9,14 @@ export function Onboarding({ onDismiss }: { onDismiss: () => void }) {
         FREE FR
       </div>
 
+      <img
+        src="/logo-badge.png"
+        alt=""
+        width={96}
+        height={96}
+        className="pop-in mb-4 size-24"
+      />
+
       <Heading size="lg" className="mb-4 -rotate-2">
         DON&apos;T
         <br />

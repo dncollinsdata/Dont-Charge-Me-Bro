@@ -85,7 +85,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Track free trials and subscriptions before they bill you.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/og-card.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      {
+        property: "og:image:alt",
+        content: "Don't Charge Me Bro — a credit card with a line through it",
+      },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "/og-card.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -96,6 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;800;900&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,

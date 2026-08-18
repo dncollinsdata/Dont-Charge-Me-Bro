@@ -1,6 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Wobble } from "../src/anim";
+import { PopIn, Wobble } from "../src/anim";
 import { C, F, sticker } from "../src/theme";
 import { useStore } from "../src/store";
 import { Btn, Heading } from "../src/ui";
@@ -14,6 +14,10 @@ export default function Onboarding() {
       <Wobble style={styles.badge} duration={2200}>
         <Text style={styles.badgeText}>100%{"\n"}FREE FR</Text>
       </Wobble>
+
+      <PopIn>
+        <Image source={require("../assets/logo-badge.png")} style={styles.logo} />
+      </PopIn>
 
       <Heading size={44} style={styles.title}>
         DON'T{"\n"}CHARGE{"\n"}
@@ -58,6 +62,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: C.ink,
     textAlign: "center",
+  },
+  logo: {
+    width: 96,
+    height: 96,
+    marginBottom: 16,
   },
   title: {
     lineHeight: 45,

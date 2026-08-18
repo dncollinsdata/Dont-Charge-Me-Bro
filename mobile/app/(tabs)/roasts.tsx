@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { chipColor } from "../../src/lib/chips";
 import { getPermission, requestPermission, scheduledCount, syncRoasts } from "../../src/lib/notify";
@@ -83,7 +83,10 @@ export default function RoastsScreen() {
             <Chip letter={row.sub.name[0]?.toUpperCase() ?? "?"} color={chipColor(i)} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <View style={styles.notifHead}>
-                <Text style={styles.notifApp}>DON'T CHARGE ME BRO</Text>
+                <View style={styles.notifSource}>
+                  <Image source={require("../../assets/logo-mark.png")} style={styles.notifIcon} />
+                  <Text style={styles.notifApp}>DON'T CHARGE ME BRO</Text>
+                </View>
                 <Text style={styles.notifApp}>now</Text>
               </View>
               <Text style={styles.notifBody}>
@@ -137,7 +140,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     ...sticker(4),
   },
-  notifHead: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
+  notifHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  notifSource: { flexDirection: "row", alignItems: "center", gap: 5, flexShrink: 1 },
+  notifIcon: { width: 13, height: 13, borderRadius: 3.5 },
   notifApp: { fontFamily: F.black, fontSize: 10, letterSpacing: 0.6, color: C.muted },
   notifBody: { fontFamily: F.bold, fontSize: 13, lineHeight: 19, color: C.ink, marginTop: 3 },
   empty: {

@@ -11,6 +11,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.dontchargemebro.app",
+      "icon": {
+        "light": "./assets/icon.png",
+        "dark": "./assets/icon-dark.png",
+        "tinted": "./assets/icon-tinted.png"
+      },
       "infoPlist": {
         "UIBackgroundModes": []
       }
@@ -18,7 +23,7 @@
     "android": {
       "package": "com.dontchargemebro.app",
       "adaptiveIcon": {
-        "backgroundColor": "#8fd0ff",
+        "backgroundColor": "#ff2f8e",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -36,7 +41,11 @@
         {
           "backgroundColor": "#8fd0ff",
           "image": "./assets/splash-icon.png",
-          "imageWidth": 180
+          "imageWidth": 220,
+          "dark": {
+            "backgroundColor": "#111111",
+            "image": "./assets/splash-icon-dark.png"
+          }
         }
       ],
       [
