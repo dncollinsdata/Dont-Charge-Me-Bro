@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<meta name="theme-color" content="#8fd0ff" />
+<title>Don't Charge Me Bro | Never get billed by surprise</title>
+<meta name="description" content="The dead-simple iPhone tracker for free trials and subscriptions. See what bills next, get warned before it charges, and keep every bit of it on your phone." />
+<meta property="og:title" content="Don't Charge Me Bro | Never get billed by surprise" />
+<meta property="og:description" content="Add a free trial in five seconds and see exactly when it turns into a charge. No account, no card, nothing leaves your phone." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://dontchargeme.app/" />
+<meta property="og:image" content="https://dontchargeme.app/og-card.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Don't Charge Me Bro — a credit card with a line through it" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://dontchargeme.app/og-card.png" />
+<link rel="icon" href="/favicon.ico" type="image/x-icon" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet" />
+<style>
+  /* Tokens are src/styles.css verbatim: the app's flat sticker palette, plus
+     the hard zero-blur offset shadows the whole look hangs off. */
+  :root {
+    --ink:#111111; --white:#ffffff;
+    --sky:#8fd0ff; --sky-deep:#bfe3ff;
+    --pink:#ff2f8e; --pink-deep:#e11d74;
+    --yellow:#ffe14d; --lime:#a5f56b; --steel:#33506b;
+    --hard-sm:3px 3px 0 var(--ink);
+    --hard:4px 4px 0 var(--ink);
+    --hard-md:5px 5px 0 var(--ink);
+    --hard-lg:6px 6px 0 var(--ink);
+  }
+
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    margin:0; background:var(--sky-deep); color:var(--ink);
+    font-family:"Nunito", ui-sans-serif, system-ui, sans-serif;
+    font-weight:800; line-height:1.5; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .display { font-family:"Titan One", ui-sans-serif, system-ui, sans-serif; font-weight:400; }
+  h1, h2, h3 { margin:0; font-family:"Titan One", ui-sans-serif, system-ui, sans-serif; font-weight:400; }
+  .wrap { position:relative; width:100%; max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  /* The sticker: 3-4px ink outline over a flat fill, shifted shadow, off-axis. */
+  .sticker { border:4px solid var(--ink); box-shadow:var(--hard-lg); }
+
+  /* Bubbles lifted off the app icon, parked behind the fold. */
+  .bubble { position:absolute; border:5px solid var(--ink); border-radius:50%; z-index:0; pointer-events:none; }
+  .bubble.a { width:210px; height:210px; background:var(--yellow); top:-96px; left:-104px; }
+  .bubble.b { width:240px; height:240px; background:var(--sky); bottom:60px; right:-120px; }
+  @media (max-width:919px) { .bubble { display:none; } }
+
+  /* ---------- hero ---------- */
+  .hero { position:relative; z-index:1; display:grid; gap:52px; padding:52px 0 64px; justify-items:center; }
+  @media (min-width:920px) {
+    .hero { grid-template-columns:1fr auto; align-items:center; gap:64px; padding:80px 0 88px; justify-items:start; }
+  }
+  .copy { max-width:31rem; }
+  .badge {
+    display:inline-flex; align-items:center; gap:7px; rotate:-2deg;
+    background:var(--yellow); border:3px solid var(--ink); box-shadow:var(--hard-sm);
+    border-radius:999px; padding:7px 15px; font-size:.8rem; font-weight:900;
+  }
+  h1 {
+    margin-top:18px; font-size:clamp(2.6rem,7vw,4rem); line-height:.98;
+    rotate:-2deg; text-shadow:4px 4px 0 var(--white);
+  }
+  h1 .bro { color:var(--pink); }
+  .lede { margin:22px 0 0; font-size:1.05rem; color:var(--steel); }
+  .cta { margin-top:28px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .cta .pill {
+    display:inline-block; background:var(--pink); color:var(--white);
+    border:3px solid var(--ink); box-shadow:var(--hard-md); border-radius:999px;
+    padding:15px 30px; font-family:"Titan One", sans-serif; font-size:1.05rem;
+  }
+  .cta img { width:62px; height:62px; }
+  .note { margin:14px 0 0; font-size:.85rem; font-weight:800; color:var(--steel); }
+
+  /* ---------- iPhone: the app screen at ~0.73 of device scale ---------- */
+  .stage { position:relative; }
+  .tag {
+    position:absolute; z-index:3; border:3px solid var(--ink); box-shadow:var(--hard);
+    border-radius:999px; padding:9px 14px; font-size:.72rem; font-weight:900;
+    text-align:center; line-height:1.15;
+  }
+  .tag.not-today { top:-14px; right:-16px; rotate:10deg; background:var(--yellow); }
+  .tag.zero { bottom:-28px; left:-22px; rotate:-8deg; background:var(--lime); font-family:"Titan One", sans-serif; font-weight:400; font-size:.9rem; }
+
+  .phone {
+    position:relative; width:316px; padding:11px; border-radius:52px;
+    background:var(--ink); box-shadow:10px 10px 0 var(--ink);
+  }
+  .screen {
+    position:relative; height:664px; border-radius:42px; overflow:hidden;
+    background:var(--sky-deep); display:flex; flex-direction:column;
+  }
+  .island { position:absolute; top:9px; left:50%; translate:-50% 0; width:84px; height:25px; border-radius:999px; background:#000; z-index:4; }
+  .statusbar { position:relative; z-index:3; display:flex; justify-content:space-between; align-items:center; padding:14px 22px 0; font-size:11px; font-weight:900; }
+  .statusbar .icons { display:flex; align-items:center; gap:4px; }
+
+  .app { flex:1; padding:12px 15px 0; min-height:0; }
+  .app h2 { font-size:26px; line-height:1; rotate:-2deg; text-shadow:3px 3px 0 var(--white); }
+  .app h2 .bro { color:var(--pink); }
+  .app .head { position:relative; margin-bottom:12px; }
+  .app .scam {
+    position:absolute; top:-6px; right:0; rotate:8deg;
+    background:var(--yellow); border:3px solid var(--ink); box-shadow:var(--hard-sm);
+    border-radius:999px; padding:6px 11px; font-size:9.5px; font-weight:900; text-align:center; line-height:1.15;
+  }
+
+  .card { border:3px solid var(--ink); border-radius:16px; background:var(--white); box-shadow:var(--hard); }
+  .panic { rotate:-1deg; margin-bottom:13px; padding:13px; border-radius:18px; background:var(--pink); color:var(--white); box-shadow:var(--hard-md); border:3px solid var(--ink); }
+  .panic .t { font-family:"Titan One", sans-serif; font-size:16px; }
+  .panic .s { margin-top:5px; font-size:11.5px; font-weight:800; }
+  .panic .go { display:inline-block; margin-top:9px; background:var(--white); color:var(--ink); border:3px solid var(--ink); box-shadow:var(--hard-sm); border-radius:999px; padding:5px 14px; font-size:11.5px; font-weight:900; }
+
+  .stats { display:flex; gap:9px; margin-bottom:13px; }
+  .tile { flex:1; padding:9px 11px; }
+  .tile.streak { rotate:1deg; background:var(--lime); }
+  .tile .k { font-size:9.5px; font-weight:900; letter-spacing:.06em; color:#737373; }
+  .tile.streak .k { color:var(--ink); }
+  .tile .v { margin-top:1px; font-family:"Titan One", sans-serif; font-size:21px; font-variant-numeric:tabular-nums; }
+
+  .leeches { rotate:-1deg; margin-bottom:9px; font-size:15px; }
+  .row { display:flex; align-items:center; gap:9px; padding:9px 11px; margin-bottom:9px; }
+  .chip {
+    flex:0 0 auto; width:34px; height:34px; border-radius:10px; border:3px solid var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-family:"Titan One", sans-serif; font-size:15px;
+  }
+  .row .bd { flex:1; min-width:0; }
+  .row .nm { font-size:12.5px; font-weight:800; }
+  .row .pr { font-size:10.5px; font-weight:800; color:#525252; }
+  .row .pr.urgent { color:var(--pink-deep); }
+  .row .yeet { background:var(--ink); color:var(--white); border-radius:999px; padding:5px 11px; font-size:10.5px; font-weight:900; }
+
+  .tabbar { flex:none; display:grid; grid-template-columns:repeat(4,1fr); gap:2px; border-top:4px solid var(--ink); background:var(--white); padding:9px 8px 12px; text-align:center; }
+  .tabbar .em { font-size:19px; line-height:1; }
+  .tabbar .lb { margin-top:2px; font-size:8.5px; font-weight:900; letter-spacing:.08em; color:#a3a3a3; }
+  .tabbar .on .lb { color:var(--pink); }
+
+  /* ---------- features ---------- */
+  .features { position:relative; z-index:1; display:grid; gap:22px; padding:8px 0 64px; }
+  @media (min-width:820px) { .features { grid-template-columns:repeat(3,1fr); gap:26px; } }
+  .feature { background:var(--white); border-radius:22px; padding:24px; }
+  .feature:nth-child(1) { rotate:-1deg; }
+  .feature:nth-child(2) { rotate:.5deg; background:var(--yellow); }
+  .feature:nth-child(3) { rotate:-.5deg; }
+  .feature .em { font-size:30px; line-height:1; }
+  .feature h3 { margin-top:12px; font-size:1.15rem; }
+  .feature p { margin:10px 0 0; font-size:.92rem; font-weight:800; color:var(--steel); }
+  .feature:nth-child(2) p { color:#4a3d00; }
+
+  footer { position:relative; z-index:1; border-top:4px solid var(--ink); padding:24px 0 56px; }
+  footer p { margin:0 0 6px; font-size:.82rem; font-weight:800; color:var(--steel); }
+
+  @keyframes bro-wobble {
+    0%, 100% { rotate:10deg; }
+    50% { rotate:4deg; }
+  }
+  .tag.not-today { animation:bro-wobble 2.2s ease-in-out infinite; }
+  @media (prefers-reduced-motion:reduce) {
+    .tag.not-today { animation:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bubble a" aria-hidden="true"></div>
+  <div class="bubble b" aria-hidden="true"></div>
+
+  <section class="hero">
+    <div class="copy">
+      <span class="badge">🤐 nothing leaves your phone</span>
+      <h1>DON&rsquo;T CHARGE<br /><span class="bro">ME BRO!!</span></h1>
+      <p class="lede">Every free trial you forget becomes a subscription you never wanted. Add it in five seconds and always know what bills next.</p>
+      <div class="cta">
+        <span class="pill">COMING TO IPHONE 🚀</span>
+        <img src="/logo-badge.png" alt="" width="62" height="62" />
+      </div>
+      <p class="note">In development. No App Store listing yet.</p>
+    </div>
+
+    <div class="stage">
+      <span class="tag not-today" aria-hidden="true">NOT<br />TODAY!</span>
+      <span class="tag zero" aria-hidden="true">$0.00</span>
+
+      <div class="phone" role="img" aria-label="The Don't Charge Me Bro iPhone app, showing a Netflix trial that charges in three days, the monthly drain, and the list of tracked subscriptions">
+        <div class="screen">
+          <div class="island"></div>
+          <div class="statusbar">
+            <span>9:41</span>
+            <span class="icons">
+              <svg width="15" height="11" viewBox="0 0 16 12" fill="currentColor" aria-hidden="true"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.3" y="6" width="3" height="6" rx="1"/><rect x="8.6" y="3.5" width="3" height="8.5" rx="1"/><rect x="12.9" y="1" width="3" height="11" rx="1"/></svg>
+              <svg width="22" height="11" viewBox="0 0 24 12" fill="none" aria-hidden="true"><rect x=".6" y=".6" width="19" height="10.8" rx="3" stroke="currentColor" stroke-opacity=".55"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><path d="M21.5 4.2v3.6c1-.3 1.5-.9 1.5-1.8s-.5-1.5-1.5-1.8z" fill="currentColor" fill-opacity=".55"/></svg>
+            </span>
+          </div>
+
+          <div class="app">
+            <div class="head">
+              <h2>DON&rsquo;T CHARGE<br /><span class="bro">ME BRO!!</span></h2>
+              <span class="scam">SCAM<br />ALERT!</span>
+            </div>
+
+            <div class="panic">
+              <div class="t">😱 NETFLIX CHARGES TODAY</div>
+              <div class="s">$15.49 about to leave the chat. NOT on our watch bestie.</div>
+              <span class="go">HANDLE IT RN →</span>
+            </div>
+
+            <div class="stats">
+              <div class="tile card"><div class="k">DRAIN / MO</div><div class="v">$47.25</div></div>
+              <div class="tile card streak"><div class="k">W STREAK 🔥</div><div class="v">12 days</div></div>
+            </div>
+
+            <h3 class="leeches">THE LEECHES 🩸</h3>
+
+            <div class="row card">
+              <div class="chip" style="background:#ffe14d">N</div>
+              <div class="bd">
+                <div class="nm">Netflix</div>
+                <div class="pr urgent">in 3 days · $15.49 · free trial trap</div>
+              </div>
+              <span class="yeet">YEET</span>
+            </div>
+
+            <div class="row card">
+              <div class="chip" style="background:#8fd0ff">G</div>
+              <div class="bd">
+                <div class="nm">Gym membership</div>
+                <div class="pr">in 12 days · $39/mo</div>
+              </div>
+              <span class="yeet">YEET</span>
+            </div>
+
+            <div class="row card">
+              <div class="chip" style="background:#ff9ecb">S</div>
+              <div class="bd">
+                <div class="nm">Spotify Premium</div>
+                <div class="pr">in 21 days · $11.99/mo</div>
+              </div>
+              <span class="yeet">YEET</span>
+            </div>
+          </div>
+
+          <nav class="tabbar">
+            <div class="on"><div class="em">🏠</div><div class="lb">HOME</div></div>
+            <div><div class="em">➕</div><div class="lb">ADD</div></div>
+            <div><div class="em">💀</div><div class="lb">SHAME</div></div>
+            <div><div class="em">🔔</div><div class="lb">ROASTS</div></div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="feature sticker">
+      <div class="em" aria-hidden="true">🔔</div>
+      <h3>Warned before it charges</h3>
+      <p>Reminders land three days out, the day before, and the morning of &mdash; scheduled with iOS, so they arrive whether or not you open the app.</p>
+    </div>
+    <div class="feature sticker">
+      <div class="em" aria-hidden="true">💸</div>
+      <h3>The real number</h3>
+      <p>See what your subscriptions actually cost per month and per year, once they stop being free.</p>
+    </div>
+    <div class="feature sticker">
+      <div class="em" aria-hidden="true">🤐</div>
+      <h3>Nothing leaves your phone</h3>
+      <p>No account, no card, no sync, no server. Your list is stored on your device and nowhere else.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Don&rsquo;t Charge Me Bro &mdash; a free trial and subscription reminder for iPhone.</p>
+    <p>&copy; 2026</p>
+  </footer>
+</div>
+</body>
+</html>

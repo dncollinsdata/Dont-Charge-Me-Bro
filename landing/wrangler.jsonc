@@ -1,0 +1,18 @@
+{
+  // Cloudflare Workers static-assets config for the apex landing page.
+  // Mirrors the twominutesai/iddo setup: root directory /landing, no build
+  // command, deploy with `npx wrangler deploy` (or point the dashboard's
+  // Workers Builds at this directory).
+  //
+  // Every path here matches a static asset, so no request reaches a script —
+  // hence no "main". Add one only when the landing needs an endpoint.
+  //
+  // NOTE: `name` must match the Worker already serving dontchargeme.app, or a
+  // deploy creates a second Worker instead of updating the live one.
+  "name": "dontchargeme-landing",
+  "compatibility_date": "2026-06-09",
+  "assets": {
+    "directory": ".",
+    "html_handling": "auto-trailing-slash"
+  }
+}
