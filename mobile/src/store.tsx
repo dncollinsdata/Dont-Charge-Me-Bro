@@ -117,8 +117,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const resync = useCallback(() => {
     getPermission().then((status) => {
       if (status !== "granted") return;
-      lastSyncDay.current = todayISO();
-      syncRoasts(subs, prefs.roast).then(setCoverage);
+      syncRoasts(subs, prefs.roast)
+        .then((result) => {
+          // Stamped on success only, so a sync that failed is retried on the
+          // next foreground rather than written off for the rest of the day.
+          lastSyncDay.current = todayISO();
+          setCoverage(result);
+        })
+        .catch(() => undefined);
     });
   }, [subs, prefs.roast]);
 

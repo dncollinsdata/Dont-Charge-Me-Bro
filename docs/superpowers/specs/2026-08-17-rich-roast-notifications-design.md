@@ -391,3 +391,31 @@ presentation (card, subtitle, buttons) is verified separately with a debug
   must keep working, but is not optimised here.
 - Remote push of any kind. Everything stays local and offline.
 - Per-service cancellation links from the panic screen.
+
+## Implementation notes
+
+Two things the device changed about this design.
+
+**Attachments are moved, not copied.** iOS takes ownership of an attachment's
+file when the notification is scheduled, moving it into its own store. The
+design assumed four bundled PNGs resolved through `expo-asset` would be enough;
+in practice the first roast to use a card consumed the file and every later
+roast failed with `ERR_NOTIFICATIONS_FAILED_TO_SCHEDULE`. Because the executor
+catches and skips a roast that throws, this was silent: the first sync armed 4
+of 60 roasts, and the second armed 0 — while the Roasts screen cheerfully
+reported roasts were queued. `cards.ts` now copies the card to its own file per
+roast, which adds `expo-file-system` (and so a native rebuild) to the
+dependency list stated above. `card-names.ts` holds the pure part, so the
+"every roast gets a distinct file" property is unit-tested rather than trusted.
+
+This is exactly the failure the readback diff was specified to catch, and it
+would not have been visible to typechecking, to unit tests, or to a screenshot
+of the app's own UI.
+
+**Month arithmetic was broken before this feature touched it.** Walking twelve
+cycles forward exposed that `setMonth` turns a Jan 31 charge into Mar 3 —
+skipping February's charge entirely — and that stepping one `advance` at a time
+ratchets a month-end charge down (31 -> 30 -> 30) and never lets it back up.
+`nextDate` and `advance` now clamp to the end of short months, and the planner
+measures every cycle from a single anchor. This changes dates the home screen
+shows too, in the direction of being correct.

@@ -1,4 +1,6 @@
 import { Asset } from "expo-asset";
+import * as FileSystem from "expo-file-system/legacy";
+import { cardFileName, cardName, type CardName } from "./card-names";
 import type { PlannedRoast } from "./planner";
 
 /**
@@ -13,32 +15,56 @@ const CARDS = {
   "last-call": require("../../assets/roast-cards/last-call.png"),
 } as const;
 
-type CardName = keyof typeof CARDS;
+const DIR = FileSystem.cacheDirectory ? `${FileSystem.cacheDirectory}roast-cards/` : null;
 
-function cardName(roast: PlannedRoast): CardName {
-  if (roast.tone === "lastCall") return "last-call";
-  if (roast.tone === "morningOf") return "morning-of";
-  return roast.days === 1 ? "one-day" : "heads-up";
+const source = new Map<CardName, string>();
+
+async function sourceFor(name: CardName): Promise<string | null> {
+  const hit = source.get(name);
+  if (hit) return hit;
+  const asset = Asset.fromModule(CARDS[name]);
+  await asset.downloadAsync();
+  if (!asset.localUri) return null;
+  source.set(name, asset.localUri);
+  return asset.localUri;
 }
 
-const resolved = new Map<CardName, string>();
+/**
+ * Clear out the copies made for the previous schedule. Called once per sync,
+ * right after the pending notifications are cancelled, so the cache holds one
+ * schedule's worth of cards rather than growing forever.
+ */
+export async function resetCards() {
+  if (!DIR) return;
+  try {
+    await FileSystem.deleteAsync(DIR, { idempotent: true });
+    await FileSystem.makeDirectoryAsync(DIR, { intermediates: true });
+  } catch {
+    // A cache we could not clear is not worth failing a sync over.
+  }
+}
 
 /**
- * A local file URL for the roast's card, or null. Every failure path returns
- * null on purpose: a roast with no picture is a degraded notification, a roast
- * that threw while resolving one is a bill nobody warned about.
+ * A local file URL for the roast's card, or null.
+ *
+ * Every roast gets its OWN copy of the card, because iOS *moves* an
+ * attachment's file into its private store when the notification is scheduled.
+ * Sharing one file across notifications means the first one consumes it and
+ * every subsequent schedule fails with ERR_NOTIFICATIONS_FAILED_TO_SCHEDULE —
+ * silently, since a roast that throws is caught and skipped.
+ *
+ * Every failure path returns null on purpose: a roast with no picture is a
+ * degraded notification, a roast that threw while resolving one is a bill
+ * nobody warned about.
  */
 export async function cardFor(roast: PlannedRoast): Promise<string | null> {
-  const name = cardName(roast);
-  const hit = resolved.get(name);
-  if (hit) return hit;
-
+  if (!DIR) return null;
   try {
-    const asset = Asset.fromModule(CARDS[name]);
-    await asset.downloadAsync();
-    if (!asset.localUri) return null;
-    resolved.set(name, asset.localUri);
-    return asset.localUri;
+    const from = await sourceFor(cardName(roast));
+    if (!from) return null;
+    const to = `${DIR}${cardFileName(roast)}`;
+    await FileSystem.copyAsync({ from, to });
+    return to;
   } catch {
     return null;
   }

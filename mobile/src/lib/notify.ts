@@ -1,12 +1,11 @@
 import * as Notifications from "expo-notifications";
-import { cardFor } from "./cards";
+import { cardFor, resetCards } from "./cards";
 import { planRoasts, type PlannedRoast } from "./planner";
+import { ACTION_ALLOW, ACTION_YEET } from "./roast-action";
 import { roastLine } from "./roasts";
 import { countdownLabel, dueText, money, type RoastLevel, type Sub } from "./trials";
 
 export const ROAST_CATEGORY = "roast";
-export const ACTION_YEET = "yeet";
-export const ACTION_ALLOW = "allow";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -94,6 +93,7 @@ async function runSync(subs: Sub[], level: RoastLevel, now: Date): Promise<SyncR
   // Cancelling first is what keeps a yeeted leech from roasting you from
   // beyond the grave.
   await Notifications.cancelAllScheduledNotificationsAsync();
+  await resetCards();
 
   const plan = planRoasts(subs, { now });
   let scheduled = 0;

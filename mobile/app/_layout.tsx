@@ -56,8 +56,8 @@ export default function RootLayout() {
 
 /** Lets a tapped roast reach the store and the router. */
 function RoastResponses() {
-  const { rows, letItCharge, showToast } = useStore();
-  useRoastResponses({ rows, letItCharge, showToast });
+  const { hydrated, rows, letItCharge, showToast } = useStore();
+  useRoastResponses({ hydrated, rows, letItCharge, showToast });
   return null;
 }
 

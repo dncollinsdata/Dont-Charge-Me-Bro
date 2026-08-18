@@ -1,10 +1,12 @@
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
-import { ACTION_ALLOW } from "./notify";
+import { useCallback, useEffect, useRef } from "react";
+import { roastAction } from "./roast-action";
 import type { Row } from "./trials";
 
 type Handlers = {
+  /** Until the store has loaded from disk there are no rows to resolve against. */
+  hydrated: boolean;
   rows: Row[];
   letItCharge: (row: Row) => void;
   showToast: (message: string) => void;
@@ -18,50 +20,69 @@ type Handlers = {
  * Takes its dependencies as arguments rather than reaching for the store, so
  * this module stays out of the store -> notify -> here import cycle.
  */
-export function useRoastResponses({ rows, letItCharge, showToast }: Handlers) {
+export function useRoastResponses({ hydrated, rows, letItCharge, showToast }: Handlers) {
   const router = useRouter();
   const handled = useRef(new Set<string>());
-  const latest = useRef({ rows, letItCharge, showToast });
-  latest.current = { rows, letItCharge, showToast };
+  const queue = useRef<Notifications.NotificationResponse[]>([]);
+  const latest = useRef({ hydrated, rows, letItCharge, showToast });
+  latest.current = { hydrated, rows, letItCharge, showToast };
 
-  useEffect(() => {
-    let alive = true;
+  const drain = useCallback(() => {
+    // A cold start launched by a notification arrives long before AsyncStorage
+    // has given us any subs. Acting now would resolve every subId to nothing
+    // and drop bro on the home screen — the dead end we are here to remove.
+    if (!latest.current.hydrated) return;
 
-    function handle(response: Notifications.NotificationResponse) {
+    const pending = queue.current;
+    queue.current = [];
+
+    for (const response of pending) {
       const request = response.notification.request;
-      // A cold-start response is delivered by getLastNotificationResponseAsync
-      // AND, on some launches, to the listener as well. Act once.
-      if (handled.current.has(request.identifier)) return;
+      if (handled.current.has(request.identifier)) continue;
       handled.current.add(request.identifier);
 
-      const subId = request.content.data?.subId;
-      if (typeof subId !== "string") return;
+      const action = roastAction(
+        request.content.data ?? {},
+        response.actionIdentifier,
+        latest.current.rows,
+      );
 
-      const row = latest.current.rows.find((r) => r.sub.id === subId);
-      // The sub was yeeted on some earlier launch; there is nothing to panic about.
-      if (!row) return;
+      if (action.kind === "ignore") continue;
 
-      if (response.actionIdentifier === ACTION_ALLOW) {
-        latest.current.letItCharge(row);
+      if (action.kind === "allow") {
+        latest.current.letItCharge(action.row);
         latest.current.showToast("streak: deceased 🪦 rip");
-        return;
+        continue;
       }
 
       // Both a plain tap and YEET IT land on panic, where claiming the W happens
       // against a screen that can ask whether he really cancelled it.
-      router.push(`/panic?subId=${encodeURIComponent(subId)}&from=roast`);
+      router.push(`/panic?subId=${encodeURIComponent(action.row.sub.id)}&from=roast`);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    let alive = true;
+
+    function enqueue(response: Notifications.NotificationResponse) {
+      queue.current.push(response);
+      drain();
     }
 
+    // The launch that opened the app, if a notification is what opened it.
     Notifications.getLastNotificationResponseAsync()
       .then((response) => {
-        if (alive && response) handle(response);
+        if (alive && response) enqueue(response);
       })
       .catch(() => undefined);
 
-    const subscription = Notifications.addNotificationResponseReceivedListener(handle);
+    const subscription = Notifications.addNotificationResponseReceivedListener(enqueue);
     return () => {
       alive = false;
       subscription.remove();
     };
-  }, [router]);
+  }, [drain]);
+
+  // Hydration finishing, or the rows changing, is what makes a queued tap actionable.
+  useEffect(drain, [drain, hydrated, rows]);
 }
