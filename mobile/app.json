@@ -13,6 +13,9 @@
       "bundleIdentifier": "com.dontchargemebro.app",
       "infoPlist": {
         "UIBackgroundModes": []
+      },
+      "entitlements": {
+        "com.apple.developer.usernotifications.time-sensitive": true
       }
     },
     "android": {

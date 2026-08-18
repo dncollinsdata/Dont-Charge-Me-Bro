@@ -9,6 +9,7 @@ import { Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { FullWindowOverlay } from "react-native-screens";
 import { PopIn } from "../src/anim";
+import { useRoastResponses } from "../src/lib/roast-response";
 import { C, F, sticker } from "../src/theme";
 import { StoreProvider, useStore } from "../src/store";
 
@@ -33,6 +34,7 @@ export default function RootLayout() {
       <StoreProvider>
         <StatusBar style="dark" />
         <OnboardingGate />
+        <RoastResponses />
         <View style={{ flex: 1 }}>
           <Stack
             screenOptions={{
@@ -50,6 +52,13 @@ export default function RootLayout() {
       </StoreProvider>
     </SafeAreaProvider>
   );
+}
+
+/** Lets a tapped roast reach the store and the router. */
+function RoastResponses() {
+  const { rows, letItCharge, showToast } = useStore();
+  useRoastResponses({ rows, letItCharge, showToast });
+  return null;
 }
 
 /** Sends first-run users to the pitch, and never shows it twice. */

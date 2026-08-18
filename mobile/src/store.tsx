@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AppState } from "react-native";
 import {
   createContext,
   useCallback,
@@ -9,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getPermission, syncRoasts } from "./lib/notify";
+import { getPermission, syncRoasts, type SyncResult } from "./lib/notify";
 import {
   addWasted,
   advance,
@@ -41,6 +42,10 @@ type Store = {
   wastedTotal: number;
   streak: number;
   toast: string | null;
+  /** What the last schedule rebuild managed to arm. Null until one has run. */
+  coverage: SyncResult | null;
+  /** Rebuild the schedule now — for when permission has just been granted. */
+  resyncRoasts: () => void;
   showToast: (message: string) => void;
   addSub: (sub: Sub) => void;
   yeet: (row: Row) => void;
@@ -73,6 +78,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState<Prefs>(defaultPrefs);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [coverage, setCoverage] = useState<SyncResult | null>(null);
+  const lastSyncDay = useRef<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -107,13 +114,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const rows = useMemo(() => toRows(subs), [subs]);
 
+  const resync = useCallback(() => {
+    getPermission().then((status) => {
+      if (status !== "granted") return;
+      lastSyncDay.current = todayISO();
+      syncRoasts(subs, prefs.roast).then(setCoverage);
+    });
+  }, [subs, prefs.roast]);
+
   // Any change to what's tracked, or to how mean we are, rebuilds the schedule.
   useEffect(() => {
-    if (!hydrated) return;
-    getPermission().then((status) => {
-      if (status === "granted") syncRoasts(rows, prefs.roast);
+    if (hydrated) resync();
+  }, [hydrated, resync]);
+
+  /**
+   * Coverage is finite, so every app open is a chance to top it up. Once a day
+   * is enough: rescheduling sixty notifications every time the app is flicked
+   * to would be churn, but a day that ends without a resync is a day of the
+   * schedule quietly expiring.
+   */
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active" || !hydrated) return;
+      if (lastSyncDay.current === todayISO()) return;
+      resync();
     });
-  }, [rows, prefs.roast, hydrated]);
+    return () => subscription.remove();
+  }, [hydrated, resync]);
 
   const showToast = useCallback((message: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -132,6 +159,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     wastedTotal: wasted.reduce((sum, w) => sum + w.amount, 0),
     streak: streakDays(prefs.streakSince),
     toast,
+    coverage,
+    resyncRoasts: resync,
     showToast,
     addSub: (sub) => setSubs((prev) => [...prev, sub]),
     yeet: (row) => {
