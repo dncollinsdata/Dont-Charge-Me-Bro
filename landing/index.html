@@ -6,9 +6,9 @@
 <meta name="color-scheme" content="light" />
 <meta name="theme-color" content="#8fd0ff" />
 <title>Don't Charge Me Bro | Never get billed by surprise</title>
-<meta name="description" content="The dead-simple iPhone tracker for free trials and subscriptions. See what bills next, get warned before it charges, and keep every bit of it on your phone." />
+<meta name="description" content="The dead-simple iPhone tracker for free trials and subscriptions. $1.99 once, no subscription. See what bills next, get warned before it charges, and keep every bit of it on your phone." />
 <meta property="og:title" content="Don't Charge Me Bro | Never get billed by surprise" />
-<meta property="og:description" content="Add a free trial in five seconds and see exactly when it turns into a charge. No account, no card, nothing leaves your phone." />
+<meta property="og:description" content="$1.99 once, never again. Add a free trial in five seconds and see exactly when it turns into a charge. No account, no card, nothing leaves your phone." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://dontchargeme.app/" />
 <meta property="og:image" content="https://dontchargeme.app/og-card.png" />
@@ -146,6 +146,16 @@
   .tabbar .lb { margin-top:2px; font-size:8.5px; font-weight:900; letter-spacing:.08em; color:#a3a3a3; }
   .tabbar .on .lb { color:var(--pink); }
 
+  /* ---------- price: the punchline, not the fine print ---------- */
+  .price {
+    position:relative; z-index:1; rotate:-.6deg; margin:0 0 34px;
+    display:flex; align-items:flex-start; gap:16px;
+    background:var(--lime); border-radius:22px; padding:22px 24px;
+  }
+  .price .em { flex:none; font-size:30px; line-height:1; }
+  .price h3 { font-size:1.15rem; }
+  .price p { margin:8px 0 0; font-size:.92rem; font-weight:800; color:#1f3d0a; }
+
   /* ---------- features ---------- */
   .features { position:relative; z-index:1; display:grid; gap:22px; padding:8px 0 64px; }
   @media (min-width:820px) { .features { grid-template-columns:repeat(3,1fr); gap:26px; } }
@@ -182,10 +192,10 @@
       <h1>DON&rsquo;T CHARGE<br /><span class="bro">ME BRO!!</span></h1>
       <p class="lede">Every free trial you forget becomes a subscription you never wanted. Add it in five seconds and always know what bills next.</p>
       <div class="cta">
-        <span class="pill">COMING TO IPHONE 🚀</span>
+        <span class="pill">COMING TO IPHONE &middot; $1.99</span>
         <img src="/logo-badge.png" alt="" width="62" height="62" />
       </div>
-      <p class="note">In development. No App Store listing yet.</p>
+      <p class="note">$1.99 once &mdash; no subscription, no in-app purchases, no ads. In development; no App Store listing yet.</p>
     </div>
 
     <div class="stage">
@@ -261,6 +271,15 @@
     </div>
   </section>
 
+  <section class="price sticker">
+    <div class="em" aria-hidden="true">💵</div>
+    <div>
+      <h3>$1.99. One time.</h3>
+      <p>The app that kills subscriptions isn&rsquo;t going to be one. Pay once on the App Store
+      and that&rsquo;s the end of it &mdash; no in-app purchases, no pro tier, no ads, no upsell.</p>
+    </div>
+  </section>
+
   <section class="features">
     <div class="feature sticker">
       <div class="em" aria-hidden="true">🔔</div>
@@ -280,7 +299,7 @@
   </section>
 
   <footer>
-    <p>Don&rsquo;t Charge Me Bro &mdash; a free trial and subscription reminder for iPhone.</p>
+    <p>Don&rsquo;t Charge Me Bro &mdash; a free trial and subscription reminder for iPhone. $1.99 one-time.</p>
     <p>&copy; 2026</p>
   </footer>
 </div>

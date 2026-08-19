@@ -4,9 +4,9 @@ export function Onboarding({ onDismiss }: { onDismiss: () => void }) {
   return (
     <div className="screen-top relative flex flex-1 flex-col justify-center overflow-y-auto px-6 pb-10">
       <div className="wobble absolute top-6 right-4 rotate-[9deg] rounded-full border-[3px] border-bro-ink bg-bro-yellow px-3.5 py-2.5 text-center text-xs font-black shadow-hard">
-        100%
+        $1.99
         <br />
-        FREE FR
+        ONCE
       </div>
 
       <img
@@ -31,6 +31,9 @@ export function Onboarding({ onDismiss }: { onDismiss: () => void }) {
         <br />
         <br />
         not anymore bestie. we track. we yeet. we keep the bag. 💰
+        <br />
+        <br />
+        and us? $1.99. one time. forever. we&apos;re not the leech 💅
       </div>
 
       <Btn

@@ -66,7 +66,7 @@ export default function Onboarding() {
       >
         <Slide width={width}>
           <Wobble style={styles.badge} duration={2200}>
-            <Text style={styles.badgeText}>100%{"\n"}FREE FR</Text>
+            <Text style={styles.badgeText}>$1.99{"\n"}ONCE</Text>
           </Wobble>
           <PopIn>
             <Image source={require("../assets/logo-badge.png")} style={styles.logo} />
@@ -80,6 +80,8 @@ export default function Onboarding() {
               free trials end. bro forgets. bro pays $14.99 for an app he opened ONCE 💀
               {"\n\n"}
               not anymore bestie. we track. we yeet. we keep the bag. 💰
+              {"\n\n"}
+              and us? $1.99. one time. forever. we're not the leech 💅
             </Text>
           </View>
         </Slide>
