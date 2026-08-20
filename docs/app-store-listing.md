@@ -200,6 +200,13 @@ review manually — auto-submit uploads, it does not release.
 3. Create the app record in App Store Connect for bundle ID `com.dontchargemebro.app`. The submit step needs a record to upload into; it will not make one for you.
 4. The first `--auto-submit` prompts for your Apple account and finds the App Store Connect app, then caches the answers. If you would rather pin it, put `ascAppId` (and optionally `appleId`, `appleTeamId`) in the `submit.production.ios` block of `eas.json`.
 
+**If the build fails on the CLI version constraint**, the cause is usually two
+installs rather than an out-of-date one. Check with `which -a eas`: a root-owned
+`/usr/local/bin/eas` shadows a newer `/opt/homebrew/bin/eas`, because `/usr/local/bin`
+comes first in PATH. Running `npm install -g eas-cli` again updates the Homebrew copy
+and changes nothing about which one runs. Either call the new one by full path, or
+remove the stale symlink with `sudo rm /usr/local/bin/eas`.
+
 Notes on this setup:
 
 - `appVersionSource: "remote"` plus `autoIncrement` means EAS owns the build number, so repeat TestFlight uploads never collide. The user-facing version stays the `version` field in `app.json` — bump that by hand for a real release.
