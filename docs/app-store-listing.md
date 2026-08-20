@@ -179,6 +179,35 @@ The app is a single $1.99 purchase with no in-app purchases.
 
 ---
 
+## Building and submitting
+
+Run from `mobile/`, on a clean `main` — EAS archives what git tracks, so anything
+uncommitted is not what gets built.
+
+```
+npm run build:ios
+```
+
+That is `eas build --platform ios --profile production --auto-submit`: it builds the
+production profile and, when the build succeeds, uploads the result straight to App
+Store Connect. From there the build appears in TestFlight, and you promote it to
+review manually — auto-submit uploads, it does not release.
+
+**First run only**, in order:
+
+1. `eas login`
+2. `eas init` — links the project and writes `extra.eas.projectId` into `app.json`. Commit that.
+3. Create the app record in App Store Connect for bundle ID `com.dontchargemebro.app`. The submit step needs a record to upload into; it will not make one for you.
+4. The first `--auto-submit` prompts for your Apple account and finds the App Store Connect app, then caches the answers. If you would rather pin it, put `ascAppId` (and optionally `appleId`, `appleTeamId`) in the `submit.production.ios` block of `eas.json`.
+
+Notes on this setup:
+
+- `appVersionSource: "remote"` plus `autoIncrement` means EAS owns the build number, so repeat TestFlight uploads never collide. The user-facing version stays the `version` field in `app.json` — bump that by hand for a real release.
+- `app.json` requests the `com.apple.developer.usernotifications.time-sensitive` entitlement, which is what lets the 8pm last call through Focus. EAS syncs that capability onto the App ID during the build; if a build fails on provisioning, that entitlement is the first thing to check.
+- `npm run build:ios:preview` produces an internal-distribution build for testing on a real device without touching App Store Connect.
+
+---
+
 ## Pre-submission checklist
 
 - [ ] Fill the three pink placeholders: `[LEGAL NAME / TRADING NAME]` in both [landing/privacy/index.html](landing/privacy/index.html) and [landing/terms/index.html](landing/terms/index.html), and `[JURISDICTION]` in the terms. Grep for `<mark>` to find them all.

@@ -40,7 +40,9 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "postinstall": "patch-package",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:ios": "eas build --platform ios --profile production --auto-submit",
+    "build:ios:preview": "eas build --platform ios --profile preview"
   },
   "private": true
 }
