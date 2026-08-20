@@ -10,7 +10,7 @@ Character limits are noted, and every count below has been checked.
 | Field in App Store Connect | Value |
 | --- | --- |
 | Privacy Policy URL (**required**) | `https://dontchargeme.app/privacy/` |
-| Support URL (**required**) | `https://dontchargeme.app/` |
+| Support URL (**required**) | `https://dontchargeme.app/support/` |
 | Marketing URL (optional) | `https://dontchargeme.app/` |
 | License Agreement / EULA (optional) | `https://dontchargeme.app/terms/` |
 
@@ -183,7 +183,7 @@ The app is a single $1.99 purchase with no in-app purchases.
 
 - [ ] Fill the three pink placeholders: `[LEGAL NAME / TRADING NAME]` in both [landing/privacy/index.html](landing/privacy/index.html) and [landing/terms/index.html](landing/terms/index.html), and `[JURISDICTION]` in the terms. Grep for `<mark>` to find them all.
 - [ ] Set up `support@dontchargeme.app` (or swap it for a real address in both legal pages and the site footer). Apple emails this address, and Review checks that it works.
-- [ ] Decide whether `https://dontchargeme.app/` is enough for the Support URL. It currently offers support only as a mailto in the footer, which reviewers sometimes reject under Guideline 1.5. A small `/support/` page with the contact address, a line on what to do if a reminder does not arrive, and links to both legal pages removes the risk.
-- [ ] Deploy `landing/` and confirm `/privacy/` and `/terms/` both load.
+- [ ] Confirm the Support URL is set to `/support/`, not the apex.
+- [ ] Deploy `landing/` and confirm `/privacy/`, `/terms/`, and `/support/` all load.
 - [ ] Update the landing hero — it still says "COMING TO IPHONE" and "no App Store listing yet".
 - [ ] Screenshots: 6.9" and 6.5" iPhone sets. Best five, in order: Home with a panic banner, the roast on a lock screen, ADD, the trophy/win card, the Hall of Shame.
