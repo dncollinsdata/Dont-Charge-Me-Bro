@@ -97,12 +97,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      // Served from this origin rather than fonts.googleapis.com. The privacy
+      // policy says no third-party trackers, and a font request hands the
+      // visitor's IP to Google before a single word is drawn. Files and the
+      // @font-face rules live in public/fonts.
       {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;800;900&display=swap",
+        rel: "preload",
+        href: "/fonts/titan-one-latin.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
       },
+      {
+        rel: "preload",
+        href: "/fonts/nunito-latin.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
+      { rel: "stylesheet", href: "/fonts/fonts.css" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],

@@ -11,9 +11,12 @@
 <link rel="canonical" href="https://dontchargeme.app/privacy/" />
 <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet" />
+<!-- Fonts are served from this origin, not fonts.googleapis.com: a page that
+     promises nothing leaves your phone should not hand your IP to Google to
+     draw its own headline. See /fonts/fonts.css. -->
+<link rel="preload" href="/fonts/titan-one-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="/fonts/fonts.css" />
 <style>
   /* Same tokens as the landing page — this is the app's voice, in plain prose. */
   :root {
@@ -68,13 +71,15 @@
   <header>
     <a class="back" href="/">&larr; DON&rsquo;T CHARGE ME BRO</a>
     <h1>PRIVACY POLICY</h1>
-    <p class="updated">Last updated 19 August 2026</p>
+    <p class="updated">Last updated 20 August 2026</p>
   </header>
 
   <section class="lede">
     <h2>The whole policy in one line</h2>
-    <p>Don&rsquo;t Charge Me Bro collects nothing about you. There is no account, no server,
-    and no analytics. Everything you type into the app stays on your iPhone.</p>
+    <p>Don&rsquo;t Charge Me Bro collects nothing about you. There is no account, no server
+    behind the app, and no analytics. Everything you type into the app stays on your iPhone.
+    This website is a separate thing from the app, and it gets
+    <a href="#website">a section of its own</a> further down.</p>
   </section>
 
   <section class="sheet">
@@ -99,7 +104,9 @@
     <ul>
       <li>No account, no sign-in, no email address, no password.</li>
       <li>No card details. The app never asks for, sees, or stores payment information &mdash; it does not connect to your bank, your card, or your App Store account.</li>
-      <li>No servers of ours. The app makes no network requests.</li>
+      <li>No servers of ours. The iPhone app makes no network requests at all &mdash; there is
+      nothing to send and nowhere to send it. The website you are reading is separate, and is
+      described in <a href="#website">This website</a> below.</li>
       <li>No analytics, no telemetry, no crash reporting, no advertising, no third-party trackers, no advertising identifier.</li>
       <li>No contacts, photos, location, microphone, or camera access.</li>
     </ul>
@@ -127,6 +134,27 @@
     <p>After a few wins the app may ask iOS to show the standard App Store review prompt.
     That prompt is displayed by Apple; we do not receive your rating or review through the
     app, and the app records only that it has already asked, so it never asks twice.</p>
+
+    <h2 id="website">This website</h2>
+    <p>Everything above is about the iPhone app. These pages are not the app, and they are
+    served the way any website is &mdash; so this is what happens when you visit one.</p>
+    <p>We run two things on the web. <strong>dontchargeme.app</strong>, including this page, is a
+    set of static pages hosted by Cloudflare. <strong>app.dontchargeme.app</strong> is a version of
+    Don&rsquo;t Charge Me Bro that runs in a browser, hosted by Railway. Both hosts keep the
+    ordinary request logs every web server keeps &mdash; your IP address, your browser&rsquo;s
+    user agent, and which page you asked for &mdash; which is what lets them serve the page and
+    block abuse. We do not use those logs to build a profile of you, we do not combine them with
+    anything else, and we cannot connect them to anything in the app, because the app sends us
+    nothing to connect them to.</p>
+    <p>What these pages do not do: no cookies, no analytics, no tracking pixels, no advertising,
+    no third-party embeds. The fonts and images are served from our own domains rather than from
+    Google or a CDN, precisely so that loading a page about privacy does not hand your IP address
+    to somebody else.</p>
+    <p>If you use the browser version at app.dontchargeme.app, your subscription list is stored by
+    your own browser and never sent to us. The server sends the page; your list stays on your
+    machine, and clearing that site&rsquo;s data in your browser deletes it. It is a convenience for
+    trying the thing out on a desktop &mdash; the iPhone app is the real one, and only the iPhone
+    app can schedule reminders that reach you when the browser is closed.</p>
 
     <h2>Children</h2>
     <p>The app is not directed at children under 13 and collects no personal information from

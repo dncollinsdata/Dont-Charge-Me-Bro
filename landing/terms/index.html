@@ -11,9 +11,12 @@
 <link rel="canonical" href="https://dontchargeme.app/terms/" />
 <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet" />
+<!-- Fonts are served from this origin, not fonts.googleapis.com: a page that
+     promises nothing leaves your phone should not hand your IP to Google to
+     draw its own headline. See /fonts/fonts.css. -->
+<link rel="preload" href="/fonts/titan-one-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="/fonts/fonts.css" />
 <style>
   :root {
     --ink:#111111; --white:#ffffff;

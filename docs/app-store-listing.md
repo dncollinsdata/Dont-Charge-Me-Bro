@@ -140,6 +140,13 @@ or crash-reporting SDK, and stores everything in local device storage.
 If a future build adds analytics, crash reporting, or any backend, this answer has to
 change before that build ships — and so does [the privacy page](landing/privacy/index.html).
 
+The web version at `app.dontchargeme.app` does not change any of this. It is a separate
+browser build served from Railway, it is not what ships to the App Store, and Apple's
+questionnaire asks only about the app you submit. It does mean the privacy policy has to
+cover two different things, which is what the "This website" section on that page is for:
+web servers keep request logs, and saying "no server" without qualifying it would be
+false about the site even while it stays true about the app.
+
 ---
 
 ## Age rating
