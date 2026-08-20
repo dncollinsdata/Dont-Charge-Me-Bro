@@ -54,36 +54,54 @@ Free trials end. Bro forgets. Bro pays $14.99 for an app he opened once. Not any
 
 ---
 
-## Description (4000 max — 2009 used)
+## Description (4000 max — 2400 used)
 
 ```
-Every free trial you forget turns into a subscription you never wanted. Don't Charge Me Bro exists to make that stop.
+Don't Charge Me Bro tracks your free trials and subscriptions and warns you before each one charges. Add what you're signed up for, and the app counts down to every renewal date so that none of them arrive as a surprise.
 
-Add a trial in five seconds — the name, the damage, and the day it bites. Then the app does one job, loudly: it warns you while the money is still yours.
+WHAT YOU TRACK
+Free trials, monthly subscriptions, and annual plans. Enter the name, the amount, and the date it bills — that's the whole setup. When a trial bills, it becomes a monthly automatically and keeps warning you every cycle after that.
 
 WARNED BEFORE IT CHARGES
-Trials and monthly charges get three days' notice, then a day, then the morning of, then a final 8pm last call while the money is still yours. Annual charges — the ones that really hurt — start their countdown two weeks out. Every reminder is scheduled with iOS, so they arrive whether or not you've opened the app in weeks. Tap one and you land straight on the panic screen: the deadline in huge letters, the amount about to go, and a clear path to cancelling.
+Trials and monthly charges get three days' notice, then a day, then the morning of, then a final 8pm last call while the money is still yours. Annual plans — the ones that really hurt — start their countdown two weeks out. Every reminder is scheduled with iOS, so they arrive whether or not you've opened the app in weeks.
+
+THE PANIC SCREEN
+Every reminder carries the name, the amount, and how long you have left, plus buttons that drop you straight into the app. There you get the deadline in huge letters and a clear path to cancelling, while there is still time to do it.
 
 PICK HOW MEAN IT IS
-Mild, medium, or UNHINGED. Mild is a polite heads-up. Unhinged is your phone screaming that Netflix is outside your house. Your call — change it any time.
+Three roast levels. Mild is a polite heads-up. Unhinged is your phone screaming that Netflix is outside your house. Change it whenever you like.
 
 THE REAL NUMBER
-See what your subscriptions actually cost per month, once they stop being free. It is never the number you assumed.
+Your total monthly drain across everything you've added, counted as though the free parts have already stopped being free. It is never the number you assumed.
 
 CLAIM THE W
-Cancel in time and the app hands you a trophy card with the exact charge you dodged, adds it to your lifetime savings, and keeps your streak alive. Share the card if you want the credit.
+Cancel in time and the app hands you a trophy card showing the exact charge you dodged, adds it to your lifetime savings, and keeps your win streak alive. Share the card if you want the credit.
 
 THE HALL OF SHAME
-Let one charge through and it lives in the Hall of Shame forever, ranked by how much you have donated to companies you forgot about. Motivating, in the worst way.
+Let a charge through and it lands in the Hall of Shame, ranked by how much you have donated to companies you forgot about. Stickers unlock along the way — first cancellation, ten wins, a cancel with zero days to spare, a flawless month.
 
-$1.99. ONCE.
-The app that kills subscriptions isn't going to be one. Pay once and that's the end of it — no subscription, no in-app purchases, no pro tier, no ads, no upsell, ever.
+ONE PURCHASE, NO STRINGS
+Buy it once and you own it. No subscription, no in-app purchases, no pro tier, no ads, no upsell.
 
 NOTHING LEAVES YOUR PHONE
-No account. No sign-in. No card details. No server, no sync, no analytics, no trackers. Your list is stored on your device and nowhere else — which is also why deleting the app deletes everything.
+No account, no sign-in, no card details. No server, no sync, no analytics, no trackers. The app works entirely offline, your list lives on your device and nowhere else — which is also why deleting the app deletes all of it.
 
 Don't Charge Me Bro is a reminder, not a cancellation service. You cancel with the company that bills you; the app makes sure you never miss the date.
 ```
+
+---
+
+### A note on the price
+
+The description deliberately does not print "$1.99". Apple shows the price on the
+product page already, and the literal figure is only correct in the US storefront —
+every other one gets its own tier price, so a hardcoded number is wrong everywhere
+else. The fact worth stating is the one the description keeps: bought once, with no
+subscription, no in-app purchases, and no ads.
+
+The same applies to the promotional text above, which does print $1.99. That is
+defensible while the app ships to the US storefront only. If you add storefronts,
+either localise that string per storefront or drop the figure from it too.
 
 ---
 
