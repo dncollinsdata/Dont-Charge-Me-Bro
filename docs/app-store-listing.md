@@ -54,7 +54,7 @@ Free trials end. Bro forgets. Bro pays $14.99 for an app he opened once. Not any
 
 ---
 
-## Description (4000 max — 1868 used)
+## Description (4000 max — 2009 used)
 
 ```
 Every free trial you forget turns into a subscription you never wanted. Don't Charge Me Bro exists to make that stop.
@@ -62,7 +62,7 @@ Every free trial you forget turns into a subscription you never wanted. Don't Ch
 Add a trial in five seconds — the name, the damage, and the day it bites. Then the app does one job, loudly: it warns you while the money is still yours.
 
 WARNED BEFORE IT CHARGES
-Reminders land three days out, the day before, the morning of, and at 8pm on the final night. They're scheduled with iOS, so they arrive whether or not you've opened the app in weeks. Tap one and you land straight on the panic screen: the deadline in huge letters, the amount about to go, and a clear path to cancelling.
+Trials and monthly charges get three days' notice, then a day, then the morning of, then a final 8pm last call while the money is still yours. Annual charges — the ones that really hurt — start their countdown two weeks out. Every reminder is scheduled with iOS, so they arrive whether or not you've opened the app in weeks. Tap one and you land straight on the panic screen: the deadline in huge letters, the amount about to go, and a clear path to cancelling.
 
 PICK HOW MEAN IT IS
 Mild, medium, or UNHINGED. Mild is a polite heads-up. Unhinged is your phone screaming that Netflix is outside your house. Your call — change it any time.
@@ -152,7 +152,7 @@ angle discoverable.
 ```
 No account or login is required — the app opens straight to its own screens and everything works offline.
 
-To see the core feature quickly: tap ADD, enter any name, an amount, and a date, and save. About eight seconds later the app delivers a one-off demo notification so you can see what a reminder looks like without waiting for a real date to approach. Notification permission is requested at the end of onboarding, and again from the ROASTS tab if it was deferred earlier.
+To see the core feature quickly: allow notifications on the last onboarding screen, then tap ADD, enter any name, an amount, and a date, and save. About eight seconds later the app delivers a one-off demo notification so you can see what a reminder looks like without waiting for a real date to approach. Notification permission is requested at the end of onboarding, and again from the ROASTS tab if it was deferred earlier.
 
 The app schedules local notifications only. It makes no network requests, has no server, and collects no data. It does not connect to any bank, card, or App Store billing account, and it cannot cancel a subscription — it only reminds the user to do so themselves. All figures shown are arithmetic on what the user typed in.
 
