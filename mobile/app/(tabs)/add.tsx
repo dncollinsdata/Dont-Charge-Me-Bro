@@ -59,10 +59,10 @@ export default function AddScreen() {
           <Field
             value={name}
             onChangeText={setName}
-            placeholder="streaming service, gym, AI girlfriend…"
+            placeholder="streaming service, gym, that meditation app…"
             returnKeyType="next"
             // Brand names are exactly what autocorrect ruins: "Netflix" becomes
-            // "Liz", "RizzGPT" becomes anything at all.
+            // "Liz", "Headspace" becomes two words.
             autoCorrect={false}
             autoCapitalize="words"
             spellCheck={false}

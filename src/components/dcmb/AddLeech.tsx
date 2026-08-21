@@ -57,7 +57,7 @@ export function AddLeech({
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="streaming service, gym, AI girlfriend…"
+            placeholder="streaming service, gym, that meditation app…"
           />
         </label>
 
